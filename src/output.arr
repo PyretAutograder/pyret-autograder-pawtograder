@@ -23,7 +23,6 @@ import string-dict as SD
 import file("../node_modules/pyret-autograder/src/main.arr") as A
 
 provide:
-  data PawtograderFeedback,
   prepare-for-pawtograder
 end
 
@@ -189,7 +188,7 @@ data PawtograderAnnotations:
       author :: PawtograderFeedbackAuthor,
       message :: String,
       points :: Option<Number>,
-        author :: PawtograderFeedbackAuthor,
+      rubric-check-id :: Option<Number>,
       released :: Boolean,
       artifact-name :: String) with:
   method to-json(self) block:
