@@ -20,11 +20,13 @@
 export type Spec = {
   solution_dir: string;
   submission_dir: string;
-  config: {
-    grader: "pyret";
-    default_entry?: string; // relative to submission_dir
-    graders: Record<string, Grader>;
-  };
+  config: Config;
+};
+
+export type Config = {
+  grader: "pyret";
+  default_entry?: string; // relative to submission_dir
+  graders: Record<string, Grader>;
 };
 
 interface BaseGrader {

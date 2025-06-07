@@ -4,6 +4,7 @@
   "description": "Pyret autograding adaptor for Pawtograder.",
   "author": "Owen Duckham <me@ironmoon.dev>",
   "license": "LGPL-3.0-or-later",
+  "types": "lib/types.d.ts",
   "scripts": {},
   "dependencies": {
     "pyret-autograder": "github:neu-cs2000/pyret-autograder#master"
