@@ -43,6 +43,14 @@ fun map-json(trans):
   end
 end
 
+fun num-to-json(num :: Number) -> J.JSON:
+  if num-is-fixnum(num) or num-is-roughnum(num):
+    J.to-json(num)
+  else:
+    J.to-json(num-to-roughnum(num))
+  end
+end
+
 data PawtograderFeedback:
   | pawtograder-feedback(
     tests :: L.List<PawtograderTest>,
@@ -58,8 +66,8 @@ data PawtograderFeedback:
     add("tests", self.tests, map-json(_.to-json()))
     add("lint", self.lint, _.to-json())
     add("output", self.output, _.to-json())
-    add("max_score", self.max-score, J.to-json)
-    add("score", self.score, J.to-json)
+    add("max_score", self.max-score, num-to-json)
+    add("score", self.score, num-to-json)
     add("artifacts", self.artifacts, map-json(_.to-json()))
     add("annotations", self.annotations, map-json(_.to-json()))
     J.j-obj(sd.freeze())
@@ -86,8 +94,8 @@ data PawtograderTest:
     add("hidden_output", self.hidden-output, J.to-json)
     add("hidden_output_format", self.hidden-output-format, _.to-json())
     add("name", self.name, J.to-json)
-    add("max_score", self.max-score, J.to-json)
-    add("score", self.score, J.to-json)
+    add("max_score", self.max-score, num-to-json)
+    add("score", self.score, num-to-json)
     add("hide_until_released", self.hide-until-released, _.to-json())
     J.j-obj(sd.freeze())
   end
@@ -199,7 +207,11 @@ data PawtograderAnnotations:
 sharing:
   method common-sd(self) block:
     sd = [SD.mutable-string-dict:]
-    add(sd, self.author)
+    add(sd, "author", self.author, _.to-json)
+    add(sd, "message", self.message, J.to-json)
+    add(sd, "points", self.points, num-to-json)
+    add(sd, "rubric_check_id", self.rubric-check-id, num-to-json)
+    add(sd, "released", self.released, J.to-json)
     sd
   end
 end
@@ -304,5 +316,4 @@ fun prepare-for-pawtograder(results :: List<{A.Id; A.AggregateResult;}>) -> J.JS
     [list:]
   ).to-json()
 end
-
 
