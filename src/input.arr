@@ -16,20 +16,23 @@
   You should have received a copy of the GNU Lesser General Public License
   with pyret-autograder-pawtograder. If not, see <http://www.gnu.org/licenses/>.
 |#
-include file("input.arr")
-include file("output.arr")
+
 import json as J
+import string-dict as SD
+import file("../node_modules/pyret-autograder/src/main.arr") as A
 
-
-provide
-  grade-pawtograder-spec
+fun expect-obj(json :: J.JSON, msg :: String) -> SD.StringDict<JSON>:
+  cases (J.JSON) json:
+  | j-obj(sd) => sd
+  | else => raise("Expected an object " + msg)
+  end
 end
 
-fun grade-pawtograder-spec(spec :: String) -> J.JSON:
-  # this can thow, but that's fine since we don't need to respond gracefully if provided an
-  # invalid spec
-  spec-json = J.read-json(spec)
-
-  graders = process-spec(spec-json)
+fun process-spec(spec :: J.JSON) -> A.Graders:
+  doc: ```
+       Processes a grading spec which should follow satisfy the Spec type found
+       in ../lib/types.d.ts
+       ```
+  toplevel = expect-obj(spec)
 
 end
