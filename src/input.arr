@@ -20,7 +20,7 @@
 import json as J
 import string-dict as SD
 import pathlib as Path
-import file("../node_modules/pyret-autograder/src/main.arr") as A
+import npm("pyret-autograder", "main.arr") as A
 
 provide:
   process-spec
@@ -89,10 +89,10 @@ fun convert-runner(
       path = Path.resolve(Path.join(solution-dir, _path))
       check-name = config.get-value("check") ^ expect-str
       A.functional(entry, path, check-name)
-    | typ == "validator" then:
+    | typ == "self-test" then:
       config = grader.get-value("config") ^ expect-obj
       func = config.get-value("function") ^ expect-str
-      A.validator(entry, func)
+      A.self-test(entry, func)
     | otherwise: raise("unkown grader type " + typ)
   end
 end

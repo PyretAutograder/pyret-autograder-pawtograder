@@ -47,31 +47,33 @@ interface WellFormedGrader extends BaseGrader {
 interface ExamplarGrader extends BaseGrader {
   type: "wheat" | "chaff";
   config: {
+    /** the path which contains the wheat/chaff implementation */
     path: string;
     /** the name of the function to use */
     function: string;
   };
 }
 
-interface FuntionalityGrader extends BaseGrader {
+interface FunctionalityGrader extends BaseGrader {
   type: "functional";
   config: {
+    /** the path which contain the check block */
     path: string;
     /** the name of the check block to use in the provided path */
     check: string;
   };
 }
 
-// TODO: this needs a better name
-interface ValidatorGrader extends BaseGrader {
-  type: "validator";
+interface SelfTestGrader extends BaseGrader {
+  type: "self-test";
   config: {
     function: string;
   };
 }
 
+
 export type Grader =
   | WellFormedGrader
   | ExamplarGrader
-  | FuntionalityGrader
-  | ValidatorGrader;
+  | FunctionalityGrader
+  | SelfTestGrader;

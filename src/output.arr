@@ -20,7 +20,7 @@ import lists as L
 import json as J
 import string-dict as SD
 
-import file("../node_modules/pyret-autograder/src/main.arr") as A
+import npm("pyret-autograder", "main.arr") as A
 
 provide:
   prepare-for-pawtograder

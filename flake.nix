@@ -26,6 +26,9 @@
             nodejs_22
             gnumake
           ];
+          shellHook = ''
+            export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.libuuid ]}:''$LD_LIBRARY_PATH"
+          '';
         };
       });
     };

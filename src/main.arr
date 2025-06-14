@@ -18,7 +18,7 @@
 |#
 include file("input.arr")
 include file("output.arr")
-import file("../node_modules/pyret-autograder/src/main.arr") as A
+import npm("pyret-autograder", "main.arr") as A
 import json as J
 
 provide:
