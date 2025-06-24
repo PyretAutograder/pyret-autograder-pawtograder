@@ -79,9 +79,9 @@ fun convert-runner(
       path = Path.resolve(Path.join(solution-dir, _path))
       func = config.get-value("function") ^ expect-str
       if typ == "wheat":
-        A.chaff(entry, path, func)
-      else:
         A.wheat(entry, path, func)
+      else:
+        A.chaff(entry, path, func)
       end
     | typ == "functional" then:
       config = grader.get-value("config") ^ expect-obj
@@ -93,8 +93,14 @@ fun convert-runner(
       config = grader.get-value("config") ^ expect-obj
       func = config.get-value("function") ^ expect-str
       A.self-test(entry, func)
-    | otherwise: raise("unkown grader type " + typ)
+    | otherwise: raise("unknown grader type " + typ)
   end
+end
+
+# FIXME: there needs to be a better way to format output, and this should be
+# better exposed by the library and somehow coupled to the type
+fun tmp-format-output(outcome):
+  A.output-text("<OUTPUT>")
 end
 
 fun convert-grader(
@@ -128,7 +134,7 @@ fun convert-grader(
   # FIXME: this needs to be updates when more thought it put into artifacts
   metadata = grader.get("points")
                    .and-then(expect-num)
-                   .and-then(A.visible(_))
+                   .and-then(A.visible(_, tmp-format-output)) # FIXME: see comment on tmp-format-output
                    .or-else(A.invisible)
 
   A.node(id, deps, runner, metadata)

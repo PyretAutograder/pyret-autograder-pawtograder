@@ -147,7 +147,7 @@ data PawtograderOutput:
   | pawtograder-output(output-format :: Option<OutputFormat>, output :: String) with:
   method to-json(self) -> J.JSON block:
     sd = [SD.mutable-string-dict:]
-    add(sd, "output_format", self.output-format, _.to-json)
+    add(sd, "output_format", self.output-format, _.to-json())
     add(sd, "output", self.output, J.to-json)
     J.j-obj(sd.freeze())
   end
@@ -255,15 +255,24 @@ fun aggregate-output-to-pawtograder(output :: A.AggregateOutput) -> {OutputForma
   end
 end
 
+fun aggregate-to-pawtograder-output(output :: A.AggregateOutput) -> PawtograderOutput:
+  {output-format; output-text} = aggregate-output-to-pawtograder(output)
+  pawtograder-output(some(output-format), output-text)
+end
+
 # n.b uses + rather than link to preserve order
 # FIXME: do we really need to keep track of score and max-score?
-fun prepare-for-pawtograder(results :: List<{A.Id; A.AggregateResult;}>) -> J.JSON block:
+fun prepare-for-pawtograder(output :: {List<{A.Id; A.AggregateResult;}>; String}) -> J.JSON block:
+  {results; log} = output
   {tests; score; max-score} = for fold({acc-tests; acc-score; acc-max-score} from {[list:]; 0; 0},
                                        {id; res} from results):
-    cases (A.AggregateResult) res:
+    cases (A.AggregateResult) res block:
       | aggregate-skipped(name, so, io, max-score) =>
         {sof; sos} = aggregate-output-to-pawtograder(so)
-        {iof; ios} = (aggregate-output-to-pawtograder(_) ^ io.and-then).or-else({none; none})
+        {iof; ios} = io.and-then(aggregate-output-to-pawtograder(_))
+                       .and-then(lam({f; t}): {some(f); some(t)} end)
+                       .or-else({none; none})
+
         test = pawtograder-test(
           none, # TODO: what is a part?
           sof,
@@ -278,7 +287,10 @@ fun prepare-for-pawtograder(results :: List<{A.Id; A.AggregateResult;}>) -> J.JS
         {acc-tests + [list: test]; acc-score; acc-max-score + max-score}
       | aggregate-test(name, so, io, score, max-score) =>
         {sof; sos} = aggregate-output-to-pawtograder(so)
-        {iof; ios} = (aggregate-output-to-pawtograder(_) ^ io.and-then).or-else({none; none})
+        {iof; ios} = io.and-then(aggregate-output-to-pawtograder(_))
+                       .and-then(lam({f; t}): {some(f); some(t)} end)
+                       .or-else({none; none})
+
         test = pawtograder-test(
           none, # TODO: what is a part?
           sof,
@@ -306,10 +318,12 @@ fun prepare-for-pawtograder(results :: List<{A.Id; A.AggregateResult;}>) -> J.JS
     end
   end
 
+  student-output = some(aggregate-to-pawtograder-output(A.output-markdown(log))) # TODO: instructor log
+
   pawtograder-feedback(
     tests,
     pawtograder-lint(none, "", pass),
-    pawtograder-top-level-output(none, none, none, none), # TODO: what should we put here?
+    pawtograder-top-level-output(student-output, none, none, none),
     some(max-score),
     some(score),
     artifacts,
