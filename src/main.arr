@@ -26,8 +26,8 @@ provide:
 end
 
 fun grade-pawtograder-spec(spec :: String) -> J.JSON:
-  # this can thow, but that's fine since we don't need to respond gracefully if provided an
-  # invalid spec
+  # this can throw, but that's fine since we don't need to respond gracefully 
+  # if provided an invalid spec (should be validated using the provided schema)
   spec-json = J.read-json(spec)
 
   graders = process-spec(spec-json)

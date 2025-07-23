@@ -131,7 +131,7 @@ fun convert-grader(
 
   runner = convert-runner(solution-dir, submission-dir, entry, grader)
 
-  # FIXME: this needs to be updates when more thought it put into artifacts
+  # FIXME: this needs to be updated when more thought is put into artifacts
   metadata = grader.get("points")
                    .and-then(expect-num)
                    .and-then(A.visible(_, tmp-format-output)) # FIXME: see comment on tmp-format-output
@@ -143,7 +143,7 @@ end
 fun process-spec(spec :: J.JSON) -> A.Graders:
   doc: ```
        Processes a grading spec which should follow satisfy the Spec type found
-       in ../lib/types.d.ts
+       in ../lib/schema.ts
        ```
   toplevel = expect-obj(spec)
 
