@@ -1,6 +1,6 @@
 {
   "name": "pyret-autograder-pawtograder",
-  "version": "0.0.1-pre3",
+  "version": "0.0.1-pre4",
   "description": "Pyret autograding adaptor for Pawtograder.",
   "author": "Owen Duckham <me@ironmoon.dev>",
   "license": "LGPL-3.0-or-later",
@@ -9,6 +9,6 @@
   "scripts": {},
   "dependencies": {
     "pyret-autograder": "0.0.1-pre3",
-    "zod": "^3.25.56"
+    "zod": "^4.0.5"
   }
 }

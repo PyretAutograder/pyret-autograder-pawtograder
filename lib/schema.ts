@@ -17,8 +17,12 @@
   with pyret-autograder-pawtograder. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { z } from "zod/v4";
+import { z } from "zod";
 
+// ensure that consumers of the library use the same version of zod
+export { z };
+
+// TODO: consider making this a strictObject to ensure no unused fields
 export const Spec = z.object({
   solution_dir: z.string(),
   submission_dir: z.string(),
@@ -46,8 +50,7 @@ export type Config = z.infer<typeof Config>;
 const BaseGrader = z.object({
   deps: z.string().array().optional(),
   // TODO: reconsider this, maybe break into base scorer, guard, artifact
-  // NOTE: do we want to enforce being positive?
-  points: z.number().positive().optional(),
+  points: z.number().nonnegative().optional(),
   /**
    * The path of the entry point to the student's program.
    *
@@ -88,7 +91,7 @@ const SelfTestGrader = BaseGrader.extend({
   }),
 });
 
-export const Grader = z.union([
+export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
   ExamplarGrader,
   FunctionalGrader,
