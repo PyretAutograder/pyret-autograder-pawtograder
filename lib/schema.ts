@@ -23,7 +23,7 @@ import { z } from "zod";
 export { z };
 
 // TODO: consider making this a strictObject to ensure no unused fields
-export const Spec = z.object({
+export const Spec = z.strictObject({
   solution_dir: z.string(),
   submission_dir: z.string(),
   get config() {
@@ -33,7 +33,7 @@ export const Spec = z.object({
 
 export type Spec = z.infer<typeof Spec>;
 
-export const Config = z.object({
+export const Config = z.strictObject({
   grader: z.literal("pyret"),
   /**
    * The default entry point to the student's program, relative to
@@ -47,7 +47,7 @@ export const Config = z.object({
 
 export type Config = z.infer<typeof Config>;
 
-const BaseGrader = z.object({
+const BaseGrader = z.strictObject({
   deps: z.string().array().optional(),
   /**
    * The path of the entry point to the student's program.

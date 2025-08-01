@@ -64,7 +64,7 @@ fun convert-grader(
   default-entry :: Option<String>,
   id :: String,
   grader :: SD.StringDict<J.JSON>
-) -> Grader<Any, Any, Any> block: # TODO: these should be existentials
+) -> A.Grader<Any, Any, Any> block: # TODO: these should be existentials
   deps = grader.get("deps")
                .and-then(expect-arr)
                .or-else([list:])
@@ -86,7 +86,7 @@ fun convert-grader(
 
   typ = grader.get-value("type") ^ expect-str
 
-  ask:
+  ask block:
     | typ == "well-formed" then:
       A.mk-well-formed(id, deps, entry)
     | (typ == "wheat") or (typ == "chaff") then:
@@ -94,26 +94,29 @@ fun convert-grader(
       _path = config.get-value("path") ^ expect-str
       path = Path.resolve(Path.join(solution-dir, _path))
       func = config.get-value("function") ^ expect-str
+      points = grader.get("points").and-then(expect-num).or-else(0)
       if typ == "wheat":
-        A.mk-wheat(id, deps, entry, path, func)
+        A.mk-wheat(id, deps, entry, path, func, points)
       else:
-        A.mk-chaff(id, deps, entry, path, func)
+        A.mk-chaff(id, deps, entry, path, func, points)
       end
     | typ == "functional" then:
       config = grader.get-value("config") ^ expect-obj
       _path = config.get-value("path") ^ expect-str
       path = Path.resolve(Path.join(solution-dir, _path))
       check-name = config.get-value("check") ^ expect-str
-      A.mk-functional(id, deps, entry, path, check-name)
+      points = grader.get("points").and-then(expect-num).or-else(0)
+      A.mk-functional(id, deps, entry, path, check-name, points)
     | typ == "self-test" then:
       config = grader.get-value("config") ^ expect-obj
       func = config.get-value("function") ^ expect-str
-      A.mk-self-test(id, deps, entry, func)
+      points = grader.get("points").and-then(expect-num).or-else(0)
+      A.mk-self-test(id, deps, entry, func, points)
     | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
   end
 end
 
-fun process-spec(spec :: J.JSON) -> A.Graders:
+fun process-spec(spec :: J.JSON) -> List<A.Grader>:
   doc: ```
        Processes a grading spec which should follow satisfy the Spec type found
        in ../lib/schema.ts
