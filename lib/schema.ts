@@ -49,8 +49,6 @@ export type Config = z.infer<typeof Config>;
 
 const BaseGrader = z.object({
   deps: z.string().array().optional(),
-  // TODO: reconsider this, maybe break into base scorer, guard, artifact
-  points: z.number().nonnegative().optional(),
   /**
    * The path of the entry point to the student's program.
    *
@@ -59,11 +57,17 @@ const BaseGrader = z.object({
   entry: z.string().optional(),
 });
 
-const WellFormedGrader = BaseGrader.extend({
+const BaseGuard = BaseGrader;
+
+const BaseScorer = BaseGrader.extend({
+  points: z.number().nonnegative().optional(),
+});
+
+const WellFormedGrader = BaseGuard.extend({
   type: z.literal("well-formed"),
 });
 
-const ExamplarGrader = BaseGrader.extend({
+const ExamplarGrader = BaseScorer.extend({
   type: z.union([z.literal("wheat"), z.literal("chaff")]),
   config: z.object({
     /** the path which contains the wheat/chaff implementation */
@@ -73,7 +77,7 @@ const ExamplarGrader = BaseGrader.extend({
   }),
 });
 
-const FunctionalGrader = BaseGrader.extend({
+const FunctionalGrader = BaseScorer.extend({
   type: z.literal("functional"),
   config: z.object({
     /** the path which contain the check block */
@@ -83,7 +87,7 @@ const FunctionalGrader = BaseGrader.extend({
   }),
 });
 
-const SelfTestGrader = BaseGrader.extend({
+const SelfTestGrader = BaseScorer.extend({
   type: z.literal("self-test"),
   config: z.object({
     /** the name of the function to use */

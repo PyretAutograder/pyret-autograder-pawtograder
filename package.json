@@ -12,7 +12,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "pyret-autograder": "0.0.1-pre3",
+    "pyret-autograder": "0.0.1-pre6",
     "zod": "^4.0.5"
   },
   "devDependencies": {

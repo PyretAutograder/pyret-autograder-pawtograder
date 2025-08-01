@@ -53,13 +53,13 @@ end
 
 data PawtograderFeedback:
   | pawtograder-feedback(
-    tests :: L.List<PawtograderTest>,
-    lint :: PawtograderLint,
-    output :: PawtograderTopLevelOutput,
-    max-score :: Option<Number>,
-    score :: Option<Number>,
-    artifacts :: L.List<PawtograderArtifact>,
-    annotations :: L.List<PawtograderAnnotations>) with:
+      tests :: L.List<PawtograderTest>,
+      lint :: PawtograderLint,
+      output :: PawtograderTopLevelOutput,
+      max-score :: Option<Number>,
+      score :: Option<Number>,
+      artifacts :: L.List<PawtograderArtifact>,
+      annotations :: L.List<PawtograderAnnotations>) with:
   method to-json(self) -> J.JSON block:
     sd = [SD.mutable-string-dict:]
     shadow add = add(sd, _, _, _)
@@ -76,15 +76,15 @@ end
 
 data PawtograderTest:
   | pawtograder-test(
-    part :: Option<String>,
-    output-format :: OutputFormat,
-    output :: String,
-    hidden-output :: Option<String>,
-    hidden-output-format :: Option<OutputFormat>,
-    name :: String,
-    max-score :: Option<Number>,
-    score :: Option<Number>,
-    hide-until-released :: Option<Boolean>) with:
+      part :: Option<String>,
+      output-format :: OutputFormat,
+      output :: String,
+      hidden-output :: Option<String>,
+      hidden-output-format :: Option<OutputFormat>,
+      name :: String,
+      max-score :: Option<Number>,
+      score :: Option<Number>,
+      hide-until-released :: Option<Boolean>) with:
   method to-json(self) -> J.JSON block:
     sd = [SD.mutable-string-dict:]
     shadow add = add(sd, _, _, _)
@@ -103,9 +103,9 @@ end
 
 data PawtograderLint:
   | pawtograder-lint(
-    output-format :: Option<OutputFormat>,
-    output :: String,
-    status :: PawtograderLintStatus) with:
+      output-format :: Option<OutputFormat>,
+      output :: String,
+      status :: PawtograderLintStatus) with:
   method to-json(self) -> J.JSON block:
     sd = [SD.mutable-string-dict:]
     shadow add = add(sd, _, _, _)
@@ -260,72 +260,105 @@ fun aggregate-to-pawtograder-output(output :: A.AggregateOutput) -> PawtograderO
   pawtograder-output(some(output-format), output-text)
 end
 
-# n.b uses + rather than link to preserve order
-# FIXME: do we really need to keep track of score and max-score?
-fun prepare-for-pawtograder(output :: {List<{A.Id; A.AggregateResult;}>; String}) -> J.JSON block:
-  {results; log} = output
-  {tests; score; max-score} = for fold({acc-tests; acc-score; acc-max-score} from {[list:]; 0; 0},
-                                       {id; res} from results):
-    cases (A.AggregateResult) res block:
-      | aggregate-skipped(name, so, io, max-score) =>
-        {sof; sos} = aggregate-output-to-pawtograder(so)
-        {iof; ios} = io.and-then(aggregate-output-to-pawtograder(_))
+
+# TODO: this should be moved upstream
+data FlatAggregateResult:
+| flat-agg-test(
+    name :: String,
+    max-score :: Number,
+    score :: Number,
+    general-output :: A.AggregateOutput,
+    staff-output :: Option<A.AggregateOutput>)
+| flat-agg-art( # TODO: this needs more thought and modifications to pawtograder
+    name :: String,
+    description :: String,
+    path :: String)
+end
+
+fun aggregate-to-flat(results :: L.List<AggregateResult>) -> L.List<FlatAggregateResult>:
+  {outs; reasons} = for fold(acc from {[list:]; [list:]}, r from results):
+    {outs; reasons} = acc
+    cases (AggregateResult) r:
+      | agg-guard(name, outcome) =>
+        cases (GuardOutcome) outcome:
+          | guard-blocked(gen, staff) =>
+            new-reasons = link({ id: name, gen: gen, staff: staff }, reasons)
+            {outs; new-reasons}
+          | else => acc
+        end
+      | agg-test(name, max, outcome) =>
+        new-outs = cases (TestOutcome) outcome:
+          | test-ok(score, general, staff) =>
+            flat-agg-test(name, max, score, general, staff)
+          | test-skipped(id) =>
+            cases (Option) L.find(_.id == id, reasons):
+              | none => raise("No guard reason found for id: " + id)
+              | some(p) => flat-agg-test(name, max, 0, p.gen, p.staff)
+            end
+        end
+        ^ link(_, outs)
+
+        {new-outs; reasons}
+      | agg-artifact(name, desc, outcome) =>
+        cases (ArtifactOutcome) outcome:
+          | art-ok(path, _) =>
+            new-desc = desc.then(_.content).or-else("")
+            new-outs = link(flat-agg-art(name, desc, path), outs)
+            {new-outs; reasons}
+          | art-skipped(_) =>
+            # TODO: is this really what we want?
+            acc
+        end
+    end
+  end
+
+  outs.reverse()
+end
+
+fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
+  flattened = aggregate-to-flat(output.aggregated)
+  tests = for fold(acc from [list:], flat from flattened):
+    cases (FlatAggregateResult) flat:
+      | flat-agg-test(name, max-score, score, gen, staff) =>
+        {gof; gos} = aggregate-output-to-pawtograder(so)
+        {sof; sos} = io.and-then(aggregate-output-to-pawtograder(_))
                        .and-then(lam({f; t}): {some(f); some(t)} end)
                        .or-else({none; none})
 
         test = pawtograder-test(
           none, # TODO: what is a part?
-          sof,
-          sos,
-          ios,
-          iof,
-          name,
-          some(max-score),
-          some(0),
-          none
-        )
-        {acc-tests + [list: test]; acc-score; acc-max-score + max-score}
-      | aggregate-test(name, so, io, score, max-score) =>
-        {sof; sos} = aggregate-output-to-pawtograder(so)
-        {iof; ios} = io.and-then(aggregate-output-to-pawtograder(_))
-                       .and-then(lam({f; t}): {some(f); some(t)} end)
-                       .or-else({none; none})
-
-        test = pawtograder-test(
-          none, # TODO: what is a part?
-          sof,
-          sos,
-          ios,
-          iof,
+          gof, gos,
+          sos, sof,
           name,
           some(max-score),
           some(score),
           none
         )
-        {acc-tests + [list: test]; acc-score + score; acc-max-score + max-score}
-      | aggregate-artifact(_, _, _) => {acc-tests; acc-score; acc-max-score}
+        link(test, acc)
+      | flat-agg-art(_, _, _) => acc
     end
-  end
+  end.reverse()
 
-  artifacts = for fold(acc from [list:], {id; res} from results):
-    cases (A.AggregateResult) res:
-      | aggregate-skipped(_, _, _, _) => acc
-      | aggregate-test(_, _, _, _, _) => acc
-      | aggregate-artifact(name, path, _) => # TODO: what about artifact skip?
+  artifacts = for fold(acc from [list:], flat from flattened):
+    cases (FlatAggregateResult) flat:
+      | flat-agg-test(_, _, _, _, _) => acc
+      | flat-agg-art(name, desc, path) =>
         # TODO: can we add id as metadata somewhere?
+        # TODO: description
         artifact = pawtograder-artifact(name, path)
-        acc + [list: artifact]
+        link(artifacts, acc)
     end
-  end
+  end.reverse()
 
-  student-output = some(aggregate-to-pawtograder-output(A.output-markdown(log))) # TODO: instructor log
+  raw-trace = # TODO: this should output agg
+  {gen-top; staff-top} = summarize-execution-traces(output.trace)
+                         ^ aggregate-to-pawtograder-output
 
   pawtograder-feedback(
     tests,
-    pawtograder-lint(none, "", pass),
-    pawtograder-top-level-output(student-output, none, none, none),
-    some(max-score),
-    some(score),
+    pawtograder-lint(none, "", pass), # TODO: show guard failures here?
+    pawtograder-top-level-output(some(gen-top), some(staff-top), none, none),
+    none, none,
     artifacts,
     [list:]
   ).to-json()

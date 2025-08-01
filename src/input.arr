@@ -27,7 +27,7 @@ provide:
 end
 
 # none of the validation in this file is intended to be particuluarly helpful,
-# the zod schema in lib/schema.js should be used to validate the data with nicer
+# the zod schema in lib/schema.ts should be used to validate the data with nicer
 # messages
 
 fun expect-obj(json :: J.JSON) -> SD.StringDict<J.JSON>:
@@ -58,58 +58,13 @@ fun expect-num(json :: J.JSON) -> Number:
   end
 end
 
-
-fun convert-runner(
-  solution-dir :: String,
-  submission-dir :: String,
-  entry :: String,
-  grader :: SD.StringDict<J.JSON>
-) -> (-> A.GradingIncome):
-  typ = grader.get-value("type") ^ expect-str
-
-  ask:
-    | typ == "well-formed" then:
-      # TODO: maybe pyret-autograder should expose this thunk
-      lam():
-        A.check-well-formed(entry)
-      end
-    | (typ == "wheat") or (typ == "chaff") then:
-      config = grader.get-value("config") ^ expect-obj
-      _path = config.get-value("path") ^ expect-str
-      path = Path.resolve(Path.join(solution-dir, _path))
-      func = config.get-value("function") ^ expect-str
-      if typ == "wheat":
-        A.wheat(entry, path, func)
-      else:
-        A.chaff(entry, path, func)
-      end
-    | typ == "functional" then:
-      config = grader.get-value("config") ^ expect-obj
-      _path = config.get-value("path") ^ expect-str
-      path = Path.resolve(Path.join(solution-dir, _path))
-      check-name = config.get-value("check") ^ expect-str
-      A.functional(entry, path, check-name)
-    | typ == "self-test" then:
-      config = grader.get-value("config") ^ expect-obj
-      func = config.get-value("function") ^ expect-str
-      A.self-test(entry, func)
-    | otherwise: raise("unknown grader type " + typ)
-  end
-end
-
-# FIXME: there needs to be a better way to format output, and this should be
-# better exposed by the library and somehow coupled to the type
-fun tmp-format-output(outcome):
-  A.output-text("<OUTPUT>")
-end
-
 fun convert-grader(
   solution-dir :: String,
   submission-dir :: String,
   default-entry :: Option<String>,
   id :: String,
   grader :: SD.StringDict<J.JSON>
-) -> A.Grader block:
+) -> Grader<Any, Any, Any> block: # TODO: these should be existentials
   deps = grader.get("deps")
                .and-then(expect-arr)
                .or-else([list:])
@@ -122,22 +77,40 @@ fun convert-grader(
   # invariant not enforced by schema:
   when (is-none(entry-opt)):
     raise(
-      "Grader " + id +
+      "INVALID CONFIG: Grader " + id +
       " does not specify an `entry`point and no `default_entry` provided"
     )
   end
 
   entry = Path.resolve(Path.join(submission-dir, entry-opt.value))
 
-  runner = convert-runner(solution-dir, submission-dir, entry, grader)
+  typ = grader.get-value("type") ^ expect-str
 
-  # FIXME: this needs to be updated when more thought is put into artifacts
-  metadata = grader.get("points")
-                   .and-then(expect-num)
-                   .and-then(A.visible(_, tmp-format-output)) # FIXME: see comment on tmp-format-output
-                   .or-else(A.invisible)
-
-  A.node(id, deps, runner, metadata)
+  ask:
+    | typ == "well-formed" then:
+      A.mk-well-formed(id, deps, entry)
+    | (typ == "wheat") or (typ == "chaff") then:
+      config = grader.get-value("config") ^ expect-obj
+      _path = config.get-value("path") ^ expect-str
+      path = Path.resolve(Path.join(solution-dir, _path))
+      func = config.get-value("function") ^ expect-str
+      if typ == "wheat":
+        A.mk-wheat(id, deps, entry, path, func)
+      else:
+        A.mk-chaff(id, deps, entry, path, func)
+      end
+    | typ == "functional" then:
+      config = grader.get-value("config") ^ expect-obj
+      _path = config.get-value("path") ^ expect-str
+      path = Path.resolve(Path.join(solution-dir, _path))
+      check-name = config.get-value("check") ^ expect-str
+      A.mk-functional(id, deps, entry, path, check-name)
+    | typ == "self-test" then:
+      config = grader.get-value("config") ^ expect-obj
+      func = config.get-value("function") ^ expect-str
+      A.mk-self-test(id, deps, entry, func)
+    | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
+  end
 end
 
 fun process-spec(spec :: J.JSON) -> A.Graders:
