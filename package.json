@@ -1,6 +1,6 @@
 {
   "name": "pyret-autograder-pawtograder",
-  "version": "0.0.1-pre8",
+  "version": "0.0.1-pre11",
   "description": "Pyret autograding adaptor for Pawtograder.",
   "author": "Owen Duckham <me@ironmoon.dev>",
   "license": "LGPL-3.0-or-later",
@@ -12,12 +12,10 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "pyret-autograder": "0.0.1-pre8",
+    "pyret-autograder": "0.0.1-pre11",
     "zod": "^4.0.5"
   },
   "devDependencies": {
-    "pyret-npm": "^0.0.50",
-    "pyret-lang": "github:ironm00n/pyret-lang#fix/poly-fun-alias",
     "swc": "^1.0.11"
   }
 }
