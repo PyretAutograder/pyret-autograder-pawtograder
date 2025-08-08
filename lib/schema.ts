@@ -22,8 +22,8 @@ import { z } from "zod";
 // ensure that consumers of the library use the same version of zod
 export { z };
 
-// TODO: consider making this a strictObject to ensure no unused fields
-export const Spec = z.strictObject({
+// NOTE: intentionally allows extra keys at the top level
+export const Spec = z.object({
   solution_dir: z.string(),
   submission_dir: z.string(),
   get config() {
