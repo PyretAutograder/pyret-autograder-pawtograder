@@ -22,8 +22,7 @@ import { z } from "zod";
 // ensure that consumers of the library use the same version of zod
 export { z };
 
-// NOTE: intentionally allows extra keys at the top level
-export const Spec = z.object({
+export const Spec = z.strictObject({
   solution_dir: z.string(),
   submission_dir: z.string(),
   get config() {
@@ -33,7 +32,8 @@ export const Spec = z.object({
 
 export type Spec = z.infer<typeof Spec>;
 
-export const Config = z.strictObject({
+// NOTE: intentionally allows extra keys at the top level pawtograder.yml
+export const Config = z.object({
   grader: z.literal("pyret"),
   /**
    * The default entry point to the student's program, relative to
