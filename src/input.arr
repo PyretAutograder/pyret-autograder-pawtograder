@@ -90,6 +90,14 @@ fun convert-grader(
   ask block:
     | typ == "well-formed" then:
       A.mk-well-formed(id, deps, entry)
+    | typ == "function-defined" then:
+      config = grader.get-value("config") ^ expect-obj
+      path = config.get-value("path")
+        ^ expect-str
+        ^ Path.resolve(Path.join(solution-dir, _))
+      name = config.get-value("name") ^ expect-str
+      arity = config.get-value("arity") ^ expect-num
+      A.mk-fun-def-guard(id, deps, path, name, arity)
     | (typ == "wheat") or (typ == "chaff") then:
       config = grader.get-value("config") ^ expect-obj
       _path = config.get-value("path") ^ expect-str

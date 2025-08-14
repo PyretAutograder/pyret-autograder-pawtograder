@@ -67,6 +67,15 @@ const WellFormedGrader = BaseGuard.extend({
   type: z.literal("well-formed"),
 });
 
+const FunctionDefinedGrader = BaseGuard.extend({
+  type: z.literal("function-defined"),
+  config: z.object({
+    path: z.string(),
+    function: z.string(),
+    arity: z.int().nonnegative(),
+  }),
+});
+
 const ExamplarGrader = BaseScorer.extend({
   type: z.union([z.literal("wheat"), z.literal("chaff")]),
   config: z.object({
@@ -97,6 +106,7 @@ const SelfTestGrader = BaseScorer.extend({
 
 export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
+  FunctionDefinedGrader,
   ExamplarGrader,
   FunctionalGrader,
   SelfTestGrader,
