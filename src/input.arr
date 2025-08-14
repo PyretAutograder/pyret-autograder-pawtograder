@@ -23,7 +23,8 @@ import pathlib as Path
 import npm("pyret-autograder", "main.arr") as A
 
 provide:
-  process-spec
+  process-spec,
+  convert-grader as _convert-grader
 end
 
 # none of the validation in this file is intended to be particuluarly helpful,

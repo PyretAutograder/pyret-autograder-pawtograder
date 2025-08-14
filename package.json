@@ -9,16 +9,17 @@
   "types": "lib/schema.ts",
   "scripts": {
     "build": "swc lib -d dist",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "npx pyret --builtin-js-dir node_modules/pyret-lang/src/js/trove/ -p tests/main.arr -o .pyret/main.cjs"
   },
   "dependencies": {
     "zod": "^4.0.5"
   },
   "peerDependencies": {
-    "pyret-autograder": ">=0.0.1-0 <0.0.2"
+    "pyret-autograder": ">=0.0.1-pre.19 <0.0.2"
   },
   "devDependencies": {
-    "pyret-autograder": ">=0.0.1-0 <0.0.2",
+    "pyret-autograder": "^0.0.1-pre.19",
     "swc": "^1.0.11"
   }
 }
