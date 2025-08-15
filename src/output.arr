@@ -280,7 +280,7 @@ end
 
 fun prog-as-extra(prog :: AST.Program):
   [SD.string-dict:
-    "pyret-repl",
+    "pyret_repl",
     [SD.string-dict:
       "initial_code",
         prog.tosource().pretty(80)]]
