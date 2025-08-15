@@ -70,7 +70,6 @@ const WellFormedGrader = BaseGuard.extend({
 const FunctionDefinedGrader = BaseGuard.extend({
   type: z.literal("function-defined"),
   config: z.object({
-    path: z.string(),
     function: z.string(),
     arity: z.int().nonnegative(),
   }),
