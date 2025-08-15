@@ -100,9 +100,9 @@ fun convert-grader(
       A.mk-well-formed(id, deps, entry)
     | typ == "function-defined" then:
       config = grader.get-value("config") ^ expect-obj
-      name = config.get-value("name") ^ expect-str
+      fn-name = config.get-value("function") ^ expect-str
       arity = config.get-value("arity") ^ expect-num
-      A.mk-fn-def-guard(id, deps, entry, name, arity)
+      A.mk-fn-def-guard(id, deps, entry, fn-name, arity)
     | (typ == "wheat") or (typ == "chaff") then:
       config = grader.get-value("config") ^ expect-obj
       _path = config.get-value("path") ^ expect-str
