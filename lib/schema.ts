@@ -93,6 +93,8 @@ const FunctionalGrader = BaseScorer.extend({
     path: z.string(),
     /** the name of the check block to use in the provided path */
     check: z.string(),
+    /** the name of the function being tested (improves errors and grouping) */
+    name: z.string().optional(),
   }),
 });
 

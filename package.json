@@ -20,10 +20,10 @@
     "zod": "^4.0.5"
   },
   "peerDependencies": {
-    "pyret-autograder": ">=0.0.1-pre.19 <0.0.2"
+    "pyret-autograder": ">=0.0.1-pre.26 <0.0.2"
   },
   "devDependencies": {
-    "pyret-autograder": "^0.0.1-pre.19",
+    "pyret-autograder": "^0.0.1-pre.26",
     "swc": "^1.0.11"
   }
 }

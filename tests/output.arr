@@ -18,7 +18,7 @@
 |#
 
 include file("../src/output.arr")
-include json-structs 
+include json-structs
 
 check "OutputFormat":
   text.to-json() is j-str("text")

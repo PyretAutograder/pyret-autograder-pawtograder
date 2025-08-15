@@ -19,6 +19,7 @@
 import lists as L
 import json as J
 import string-dict as SD
+import ast as AST
 
 import npm("pyret-autograder", "main.arr") as A
 include from A:
@@ -97,7 +98,9 @@ data PawtograderTest:
       name :: String,
       max-score :: Option<Number>,
       score :: Option<Number>,
-      hide-until-released :: Option<Boolean>) with:
+      hide-until-released :: Option<Boolean>,
+      extra-data :: Option<SD.StringDict<Any>>,
+      hidden-extra-data :: Option<SD.StringDict<Any>>) with:
   method to-json(self) -> J.JSON block:
     sd = [SD.mutable-string-dict:]
     shadow add = add(sd, _, _, _)
@@ -110,6 +113,8 @@ data PawtograderTest:
     add("max_score", self.max-score, num-to-json)
     add("score", self.score, num-to-json)
     add("hide_until_released", self.hide-until-released, _.to-json())
+    add("extra_data", self.extra-data, J.to-json)
+    add("hidden_extra_data", self.hidden-extra-data, J.to-json)
     J.j-obj(sd.freeze())
   end
 end
@@ -273,33 +278,54 @@ fun aggregate-to-pawtograder-output(output :: A.AggregateOutput) -> PawtograderO
   pawtograder-output(some(output-format), output-text)
 end
 
+fun prog-as-extra(prog :: AST.Program):
+  [SD.string-dict:
+    "pyret-repl",
+    [SD.string-dict:
+      "initial_code",
+        prog.tosource().pretty(80)]]
+  ^ some
+end
+
 fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
   flattened = grading-helpers.aggregate-to-flat(output.aggregated)
-  tests = for fold(acc from [list:], flat from flattened):
+  repl-programs = output.repl-programs
+  tests = for fold(acc from [list:], {id; flat} from flattened):
     cases (grading-helpers.FlatAggregateResult) flat:
-      | flat-agg-test(name, max-score, score, go, so) =>
+      | flat-agg-test(name, max-score, score, go, so, part) =>
         {gof; gos} = aggregate-output-to-pawtograder(go)
         {sof; sos} = so.and-then(aggregate-output-to-pawtograder(_))
                        .and-then(lam({f; t}): {some(f); some(t)} end)
                        .or-else({none; none})
 
+        {extra-data; hidden-extra-data} = cases(Option) repl-programs.get(id):
+          | none => {none; none}
+          | some(prog-run) =>
+            cases(A.ProgramRun) prog-run:
+              | pr-general(prog) => {prog-as-extra(prog); none}
+              | pr-staff(prog) => {none; prog-as-extra(prog)}
+            end
+        end
+
         test = pawtograder-test(
-          none, # TODO: what is a part?
+          part,
           gof, gos,
           sos, sof,
           name,
           some(max-score),
           some(score),
-          none
+          none,
+          extra-data,
+          hidden-extra-data
         )
         link(test, acc)
       | flat-agg-art(_, _, _) => acc
     end
   end.reverse()
 
-  artifacts = for fold(acc from [list:], flat from flattened):
+  artifacts = for fold(acc from [list:], {id; flat} from flattened):
     cases (grading-helpers.FlatAggregateResult) flat:
-      | flat-agg-test(_, _, _, _, _) => acc
+      | flat-agg-test(_, _, _, _, _, _) => acc
       | flat-agg-art(name, desc, path) =>
         # TODO: can we add id as metadata somewhere?
         # TODO: description
