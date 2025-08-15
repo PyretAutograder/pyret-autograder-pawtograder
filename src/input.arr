@@ -34,28 +34,36 @@ end
 fun expect-obj(json :: J.JSON) -> SD.StringDict<J.JSON>:
   cases (J.JSON) json:
   | j-obj(sd) => sd
-  | else => raise("Expected an object")
+  | else =>
+    spy: json end
+    raise("Expected an object")
   end
 end
 
 fun expect-arr(json :: J.JSON) -> List<J.JSON>:
   cases (J.JSON) json:
   | j-arr(l) => l
-  | else => raise("Expected an array")
+  | else =>
+    spy: json end
+    raise("Expected an array")
   end
 end
 
 fun expect-str(json :: J.JSON) -> String:
   cases (J.JSON) json:
   | j-str(s) => s
-  | else => raise("Expected a string")
+  | else =>
+    spy: json end
+    raise("Expected a string")
   end
 end
 
 fun expect-num(json :: J.JSON) -> Number:
   cases (J.JSON) json:
   | j-num(n) => n
-  | else => raise("Expected a number")
+  | else =>
+    spy: json end
+    raise("Expected a number")
   end
 end
 
@@ -97,7 +105,7 @@ fun convert-grader(
         ^ Path.resolve(Path.join(solution-dir, _))
       name = config.get-value("name") ^ expect-str
       arity = config.get-value("arity") ^ expect-num
-      A.mk-fun-def-guard(id, deps, path, name, arity)
+      A.mk-fn-def-guard(id, deps, path, name, arity)
     | (typ == "wheat") or (typ == "chaff") then:
       config = grader.get-value("config") ^ expect-obj
       _path = config.get-value("path") ^ expect-str
@@ -138,10 +146,12 @@ fun process-spec(spec :: J.JSON) -> List<A.Grader>:
   config = toplevel.get-value("config") ^ expect-obj
 
   default-entry = config.get("default_entry").and-then(expect-str) # optional
-  graders = config.get-value("graders") ^ expect-obj
+  graders = config.get-value("graders") ^ expect-arr
 
-  for map(id from graders.keys-list()):
-    grader = graders.get-value(id) ^ expect-obj
+  for map(arr from graders):
+    lst = expect-arr(arr)
+    id = lst.get(0) ^ expect-str
+    grader = lst.get(1) ^ expect-obj
     convert-grader(solution-dir, submission-dir, default-entry, id, grader)
   end
 end

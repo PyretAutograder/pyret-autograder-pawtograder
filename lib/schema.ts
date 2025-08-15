@@ -41,7 +41,7 @@ export const Config = z.object({
    */
   default_entry: z.string().optional(),
   get graders() {
-    return z.record(z.string(), Grader);
+    return z.record(z.string(), Grader).transform(Object.entries);
   },
 });
 

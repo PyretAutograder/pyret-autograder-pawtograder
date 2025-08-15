@@ -14,7 +14,7 @@
   "scripts": {
     "build": "swc lib -d dist",
     "prepublishOnly": "npm run build",
-    "test": "npx pyret --builtin-js-dir node_modules/pyret-lang/src/js/trove/ -p tests/main.arr -o .pyret/main.cjs"
+    "test": "npx pyret --builtin-js-dir node_modules/pyret-lang/src/js/trove/ -p tests/main.arr -o .pyret/main.cjs && node --test tests/schema.js"
   },
   "dependencies": {
     "zod": "^4.0.5"
