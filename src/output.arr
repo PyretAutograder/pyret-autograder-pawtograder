@@ -301,9 +301,9 @@ fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
         {extra-data; hidden-extra-data} = cases(Option) repl-programs.get(id):
           | none => {none; none}
           | some(prog-run) =>
-            cases(A.ProgramRun) prog-run:
-              | pr-general(prog) => {prog-as-extra(prog); none}
-              | pr-staff(prog) => {none; prog-as-extra(prog)}
+            cases(A.RanProgram) prog-run:
+              | rp-general(prog) => {prog-as-extra(prog); none}
+              | rp-staff(prog) => {none; prog-as-extra(prog)}
             end
         end
 
