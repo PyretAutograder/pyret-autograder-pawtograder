@@ -75,6 +75,22 @@ const FunctionDefinedGrader = BaseGuard.extend({
   }),
 });
 
+const TestDiversityGrader = BaseGuard.extend({
+  type: z.literal("test-diversity"),
+  config: z.object({
+    function: z.string(),
+    min_in: z.int().nonnegative(),
+    min_out: z.int().nonnegative(),
+  }),
+});
+
+const TrainingWheelsGrader = BaseGuard.extend({
+  type: z.literal("training-wheels"),
+  config: z.object({
+    top_level_only: z.boolean(),
+  }),
+});
+
 const ExamplarGrader = BaseScorer.extend({
   type: z.union([z.literal("wheat"), z.literal("chaff")]),
   config: z.object({
@@ -108,6 +124,8 @@ const SelfTestGrader = BaseScorer.extend({
 export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
   FunctionDefinedGrader,
+  TestDiversityGrader,
+  TrainingWheelsGrader,
   ExamplarGrader,
   FunctionalGrader,
   SelfTestGrader,
