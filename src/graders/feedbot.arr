@@ -30,26 +30,40 @@ provide:
   mk-feedbot,
 end
 
-data FeedbotInfo:
-  | feedbot-info(
-      model :: String,
-      prompt :: String,
-      max-tokens :: Number,
-      temperature :: Number
+data FeedBotRateLimit:
+  | feedbot-rate-limit(
+      cooldown :: Number
   ) with:
     method serialize(self) -> J.JSON:
       [SD.string-dict:
+        "cooldown", self.cooldown
+      ]
+    end
+end
+
+data FeedbotInfo:
+  | feedbot-info(
+      provider :: String,
+      model :: String,
+      prompt :: String,
+      max-tokens :: Number,
+      temperature :: Number,
+      rate-limit :: FeedBotRateLimit
+      ) with:
+    method serialize(self) -> J.JSON:
+      [SD.string-dict:
+        "provider", self.provider,
         "model", self.model,
         "prompt", self.prompt,
         "max_tokens", self.max-tokens,
-        "temperature", self.temperature]
+        "temperature", self.temperature,
+        "rate_limit", self.rate-limit.serialize()
+        "type", "v1"]
     end
 end
 
 fun score-feedbot(
   path :: String, fn-name :: String
-  # model :: String, base-prompt :: String,
-  # max-tokens :: Number, temperature :: Number
 ):
   cases (Either) parse-path(path):
     | left(err) =>
@@ -59,9 +73,11 @@ fun score-feedbot(
         end
       })
     | right(prog) =>
-      sliced = slice-from-function(prog, fn-name)
-      # TODO: populate
-      info = feedbot-info("", "", 0, 0)
+      #sliced = slice-from-function(prog, fn-name)
+      prompt = "GIVE DESIGN RECIPE FEEDBACK ON FUNCTION `" + fn-name + "`, IN THE FOLLOWING PROGRAM.\n" +
+      "BE CONCISE, GIVING ONLY A SENTANCE OR TWO OF FEEDBACK\n\n" + prog.tosource()
+
+      info = feedbot-info("openai", "gpt-4.1-nano", prompt, 200, 0.7, feedbot-rate-limit(60))
       right({0; info})
   end
 end
@@ -73,11 +89,8 @@ fun fmt-feedbot(_, info :: FeedbotInfo) -> A.ComboAggregate:
 end
 
 
-# TODO: determine inputs
 fun mk-feedbot(
-  id :: A.Id, deps :: List<A.Id>, path :: String, fn-name :: String,
-  model :: String, base-prompt :: String, max-tokens :: Number,
-  temperature :: Number
+  id :: A.Id, deps :: List<A.Id>, path :: String, fn-name :: String
 ):
   name = "Feedbot for " + fn-name
   scorer = score-feedbot

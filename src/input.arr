@@ -150,7 +150,6 @@ fun convert-grader(
     | typ == "feedbot" then:
       config = grader.get-value("config") ^ expect-obj
       func = config.get-value("function") ^ expect-str
-      # TODO: determine inputs
       mk-feedbot(id, deps, entry, func)
     | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
   end
