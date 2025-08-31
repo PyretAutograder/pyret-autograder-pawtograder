@@ -107,6 +107,10 @@ fun convert-grader(
   ask block:
     | typ == "well-formed" then:
       A.mk-well-formed(id, deps, entry)
+    | typ == "training-wheels" then:
+      config = grader.get-value("config") ^ expect-obj
+      top-level-only = config.get-value("top_level_only") ^ expect-bool
+      A.mk-training-wheels(id, deps, entry, top-level-only)
     | typ == "function-defined" then:
       config = grader.get-value("config") ^ expect-obj
       fn-name = config.get-value("function") ^ expect-str
@@ -118,10 +122,6 @@ fun convert-grader(
       min-in = config.get-value("min_in") ^ expect-num
       min-out = config.get-value("min_out") ^ expect-num
       A.mk-test-diversity(id, deps, entry, fn, min-in, min-out)
-    | typ == "training-wheels" then:
-      config = grader.get-value("config") ^ expect-obj
-      top-level-only = config.get-value("top_level_only") ^ expect-bool
-      A.mk-training-wheels(id, deps, entry, top-level-only)
     | (typ == "wheat") or (typ == "chaff") then:
       config = grader.get-value("config") ^ expect-obj
       _path = config.get-value("path") ^ expect-str
