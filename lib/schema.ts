@@ -70,7 +70,9 @@ const WellFormedGrader = BaseGuard.extend({
 const FunctionDefinedGrader = BaseGuard.extend({
   type: z.literal("function-defined"),
   config: z.object({
+    /** the name of the function to check the existance of */
     function: z.string(),
+    /** the expected parameter arity */
     arity: z.int().nonnegative(),
   }),
 });
@@ -78,8 +80,11 @@ const FunctionDefinedGrader = BaseGuard.extend({
 const TestDiversityGrader = BaseGuard.extend({
   type: z.literal("test-diversity"),
   config: z.object({
+    /** the function to check the submission's test diversity of */
     function: z.string(),
+    /** the minimum number of inputs that must be provided */
     min_in: z.int().nonnegative(),
+    /** the minimum number of *actual* outputs that must be returned */
     min_out: z.int().nonnegative(),
   }),
 });
@@ -87,6 +92,7 @@ const TestDiversityGrader = BaseGuard.extend({
 const TrainingWheelsGrader = BaseGuard.extend({
   type: z.literal("training-wheels"),
   config: z.object({
+    /** whether to only check for mutation at the top level of the program */
     top_level_only: z.boolean(),
   }),
 });
