@@ -127,6 +127,14 @@ const SelfTestGrader = BaseScorer.extend({
   }),
 });
 
+const FeedbotGrader = BaseScorer.extend({
+  type: z.literal("feedbot"),
+  config: z.object({
+    function: z.string(),
+    // TODO: decide other inputs
+  })
+})
+
 export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
   FunctionDefinedGrader,
@@ -135,6 +143,7 @@ export const Grader = z.discriminatedUnion("type", [
   ExamplarGrader,
   FunctionalGrader,
   SelfTestGrader,
+  FeedbotGrader,
 ]);
 
 export type Grader = z.infer<typeof Grader>;

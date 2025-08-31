@@ -21,6 +21,7 @@ import json as J
 import string-dict as SD
 import pathlib as Path
 import npm("pyret-autograder", "main.arr") as A
+import mk-feedbot from file("./graders/feedbot.arr")
 
 provide:
   process-spec,
@@ -146,6 +147,11 @@ fun convert-grader(
       func = config.get-value("function") ^ expect-str
       points = grader.get("points").and-then(expect-num).or-else(0)
       A.mk-self-test(id, deps, entry, func, points)
+    | typ == "feedbot" then:
+      config = grader.get-value("config") ^ expect-obj
+      func = config.get-value("function") ^ expect-str
+      # TODO: determine inputs
+      mk-feedbot(id, deps, entry, func)
     | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
   end
 end

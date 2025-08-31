@@ -20,8 +20,9 @@ import lists as L
 import json as J
 import string-dict as SD
 import ast as AST
-
 import npm("pyret-autograder", "main.arr") as A
+import file("./graders/feedbot.arr") as FB
+
 include from A:
   module grading-helpers
 end
@@ -280,16 +281,35 @@ end
 
 fun prog-as-extra(prog :: AST.Program):
   [SD.string-dict:
-    "pyret_repl",
-    [SD.string-dict:
-      "initial_code",
-        prog.tosource().pretty(80)]]
+    "pyret_repl", [SD.string-dict:
+      "initial_code", prog.tosource().pretty(80)]]
   ^ some
+end
+
+fun feedbot-as-extra(info :: FB.FeedbotInfo):
+  [SD.string-dict:
+    "llm", info.serialize()]
+  ^ some
+end
+
+fun extract-feedbot(trace :: A.ExecutionTrace):
+  for fold(acc from [SD.string-dict:], entry from trace):
+    cases(A.NodeResult) entry.result:
+      | executed(_, info, _) =>
+        if FB.is-FeedbotInfo(info):
+          acc.set(entry.id, info)
+        else:
+          acc
+        end
+      | else => acc
+    end
+  end
 end
 
 fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
   flattened = grading-helpers.aggregate-to-flat(output.aggregated)
   repl-programs = output.repl-programs
+  feedbot-infos = extract-feedbot(output.trace)
   tests = for fold(acc from [list:], {id; flat} from flattened):
     cases (grading-helpers.FlatAggregateResult) flat:
       | flat-agg-test(name, max-score, score, go, so, part) =>
@@ -299,11 +319,15 @@ fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
                        .or-else({none; none})
 
         {extra-data; hidden-extra-data} = cases(Option) repl-programs.get(id):
-          | none => {none; none}
           | some(prog-run) =>
             cases(A.RanProgram) prog-run:
               | rp-general(prog) => {prog-as-extra(prog); none}
               | rp-staff(prog) => {none; prog-as-extra(prog)}
+            end
+          | none =>
+            cases(Option) feedbot-infos.get(id):
+              | some(info) => {feedbot-as-extra(info); none}
+              | none => {none; none}
             end
         end
 
