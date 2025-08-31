@@ -138,9 +138,9 @@ fun convert-grader(
       _path = config.get-value("path") ^ expect-str
       path = Path.resolve(Path.join(solution-dir, _path))
       check-name = config.get-value("check") ^ expect-str
-      name = config.get("name").and-then(expect-str)
+      func = config.get("function").and-then(expect-str)
       points = grader.get("points").and-then(expect-num).or-else(0)
-      A.mk-functional(id, deps, entry, path, check-name, points, name)
+      A.mk-functional(id, deps, entry, path, check-name, points, func)
     | typ == "self-test" then:
       config = grader.get-value("config") ^ expect-obj
       func = config.get-value("function") ^ expect-str
