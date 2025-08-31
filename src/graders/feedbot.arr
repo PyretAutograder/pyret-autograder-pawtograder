@@ -57,7 +57,7 @@ data FeedbotInfo:
         "prompt", self.prompt,
         "max_tokens", self.max-tokens,
         "temperature", self.temperature,
-        "rate_limit", self.rate-limit.serialize()
+        "rate_limit", self.rate-limit.serialize(),
         "type", "v1"]
     end
 end

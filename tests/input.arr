@@ -88,5 +88,10 @@ check "convert-grader":
             "config", [string-dict:
               "function", "foo",
               "points", 1]]) satisfies is-Grader
+  convert([string-dict:
+      "deps", deps,
+      "type", "feedbot",
+      "config", [string-dict:
+        "function", "foo"]]) satisfies is-Grader
 end
 
