@@ -295,13 +295,29 @@ end
 fun extract-feedbot(trace :: A.ExecutionTrace):
   for fold(acc from [SD.string-dict:], entry from trace):
     cases(A.NodeResult) entry.result:
-      | executed(_, info, _) =>
-        if FB.is-FeedbotInfo(info):
-          acc.set(entry.id, info)
+      | executed(_, minfo, _) =>
+        # NOTE(dbp 2025-9-1): Type of info is Nothing | Some T
+        if is-some(minfo) and FB.is-FeedbotInfo(minfo.value):
+          acc.set(entry.id, minfo.value)
         else:
           acc
         end
       | else => acc
+    end
+  end
+end
+
+fun remove-feedbot(trace :: A.ExecutionTrace):
+  for map(entry from trace):
+    cases(A.NodeResult) entry.result:
+      | executed(outcome, minfo, ctx) =>
+        # NOTE(dbp 2025-9-1): Type of info is Nothing | Some T
+        if is-some(minfo) and FB.is-FeedbotInfo(minfo.value):
+          {id: entry.id, result: A.executed(outcome, nothing, ctx)}
+        else:
+          entry
+        end
+      | else => entry
     end
   end
 end
@@ -358,7 +374,9 @@ fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
     end
   end.reverse()
 
-  {gen-top; staff-top} = output.trace
+  trace-without-feedbot = remove-feedbot(output.trace)
+
+  {gen-top; staff-top} = trace-without-feedbot
                          ^ grading-helpers.summarize-execution-traces
                          ^ {(r): {r; aggregate-to-pawtograder-output}}
                          ^ {({{g; s}; f}): {f(g); f(s)}}

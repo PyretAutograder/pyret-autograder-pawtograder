@@ -34,7 +34,7 @@ data FeedBotRateLimit:
   | feedbot-rate-limit(
       cooldown :: Number
   ) with:
-    method serialize(self) -> J.JSON:
+    method serialize(self):
       [SD.string-dict:
         "cooldown", self.cooldown
       ]
@@ -50,7 +50,7 @@ data FeedbotInfo:
       temperature :: Number,
       rate-limit :: FeedBotRateLimit
       ) with:
-    method serialize(self) -> J.JSON:
+    method serialize(self):
       [SD.string-dict:
         "provider", self.provider,
         "model", self.model,
@@ -75,9 +75,9 @@ fun score-feedbot(
     | right(prog) =>
       #sliced = slice-from-function(prog, fn-name)
       prompt = "GIVE DESIGN RECIPE FEEDBACK ON FUNCTION `" + fn-name + "`, IN THE FOLLOWING PROGRAM.\n" +
-      "BE CONCISE, GIVING ONLY A SENTANCE OR TWO OF FEEDBACK\n\n" + prog.tosource()
+      "BE CONCISE, GIVING ONLY A SENTANCE OR TWO OF FEEDBACK\n\n" + prog.tosource().pretty(80).join-str("\n")
 
-      info = feedbot-info("openai", "gpt-4.1-nano", prompt, 200, 0.7, feedbot-rate-limit(60))
+      info = feedbot-info("openai", "gpt-4.1-nano", prompt, 200, ~0.7, feedbot-rate-limit(60))
       right({0; info})
   end
 end
@@ -93,10 +93,9 @@ fun mk-feedbot(
   id :: A.Id, deps :: List<A.Id>, path :: String, fn-name :: String
 ):
   name = "Feedbot for " + fn-name
-  scorer = score-feedbot
+  scorer = lam(): score-feedbot(path, fn-name) end
   fmter = fmt-feedbot
   max-score = 0
   part = some(fn-name)
   A.mk-simple-scorer(id, deps, scorer, name, max-score, fmter, part)
 end
-
