@@ -19,10 +19,11 @@
 
 import file("../../src/main.arr") as P
 include npm("pyret-autograder", "../src/tools/main.arr")
+import json as J
 
 print("expecting stdin\n")
 input = io.get-stdin()
 
 result = P.grade-pawtograder-spec(input)
 
-debugging.print-json(result.serialize())
+debugging.print-raw(J.tojson(result.native().get-value("tests").get(0).get-value("extra_data")).serialize())

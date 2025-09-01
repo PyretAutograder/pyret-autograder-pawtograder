@@ -62,6 +62,14 @@ data FeedbotInfo:
     end
 end
 
+system-prompt = "You are FeedBot, an expert teacher for a programming class which uses the Design Recipe from the textbook How to Design Programs, Second Edition. The language used by the course is Pyret, which is NOT Python. Do not be confused by the syntax -- and do not give bad advice based on misinterpreting the code as Python. Your role is to facilitate learning by giving small hints as feedback on student submissions, so that they do not get stuck. Your role is NOT to tell them the correct answer or provide code of any kind. Your only job is to point them in the right direction. DO NOT answer with code or solutions of any kind. You will describe ONLY THE FIRST issue that you come across, going through the steps of the design recipe in order as appropriate, so that the student can fix each part before moving onto the next. You will address the student using \"you\", \"your\", etc. You will provide a brief response with a MAXIMUM of 1 PARAGRAPH. Do not include greetings, farewells, niceties, etc. ACCURACY IS HIGHLY IMPORTANT. THE STUDENTS ARE RELYING ON YOU. USE MAXIMUM EFFORT.\n\n"
+
+general-prompt = lam(fn-name): "You will be given an entire submission file, but you will be tasked with only giving feedback on a single function, `" + fn-name + "`. There may be issues in other parts of the file, but focus only on issues that are directly related to the function that is identified. \n\nYou will first plan your response by going through the steps of the design recipe one-by-one. For each step, you will:\n(a) analyze whether the step is present and if so, analyze how satisfactorily the step was completed. Now use your planning to select the FIRST step of the design recipe that was not satisfactorily completed. Do not address earlier steps that are satisfactorily completed. If all steps are satisfactory, simply say \"Well done, looks good\". DO NOT NITPICK SMALL DETAILS ON CORRECT SOLUTIONS, AND DO NOT REQUIRE THEM TO EXPLAIN THEIR IMPLEMENTATIONS. There should be no comments needed in correct solutions. Otherwise, address the student directly with your BRIEF, MAXIMUM TWO SENTENCES response informing the student about ONLY THE FIRST STEP they need to improve. NEVER EVER PROVIDE CODE, NEVER EVER COMMENT ON MULTIPLE STEPS, and POINT THE STUDENT TO WHAT IS WRONG BUT DO NOT TELL THEM HOW TO FIX IT. \n\n" end
+
+function-dr-prompt = "Here are the design recipe steps for functions. Follow them exactly in your planning.\n1. Signature: type annotations on all inputs and as the output of the function.\n2. Purpose Statement: the `doc: ` string -- a sentence or two explaining what the function does.\n3. Tests: 2 or more meaningfully different tests for the function, in a `where: ` block.\n4. Function Body: the actual declaration and implementation of the function.\nThe student may have written other \"helper\" functions (defined locally or outside), which will be called in the body of the main function. Students must also follow the design recipe for \"helper\" functions. CONSIDER ALL FUNCTIONS, INCLUDING \"HELPER\"s, in your planning and response.\n\n"
+
+final-instructions-prompt = "\n\nBegin your response now. Remember to first PLAN your response, and then ANSWER CONCISELY, exactly as described -- DO NOT MENTION EARLIER STEPS THAT DO NOT HAVE ISSUES. DO NOT SUMMARIZE HOW THEY WENT. JUST MENTION THE FIRST STEP WITH AN ISSUE."
+
 fun score-feedbot(
   path :: String, fn-name :: String
 ):
@@ -74,10 +82,9 @@ fun score-feedbot(
       })
     | right(prog) =>
       #sliced = slice-from-function(prog, fn-name)
-      prompt = "GIVE DESIGN RECIPE FEEDBACK ON FUNCTION `" + fn-name + "`, IN THE FOLLOWING PROGRAM.\n" +
-      "BE CONCISE, GIVING ONLY A SENTANCE OR TWO OF FEEDBACK\n\n" + prog.tosource().pretty(80).join-str("\n")
+      prompt = system-prompt + general-prompt(fn-name) + function-dr-prompt + "GIVE DESIGN RECIPE FEEDBACK AS SPECIFIED ON FUNCTION `" + fn-name + "`, WHICH APPEARS IN THE FOLLOWING PROGRAM:\n\n" + prog.tosource().pretty(80).join-str("\n") + final-instructions-prompt
 
-      info = feedbot-info("openai", "gpt-4.1-nano", prompt, 200, ~0.7, feedbot-rate-limit(60))
+      info = feedbot-info("openai", "gpt-5-mini", prompt, 5000, 1, feedbot-rate-limit(60))
       right({0; info})
   end
 end
