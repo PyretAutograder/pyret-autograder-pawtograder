@@ -14,7 +14,9 @@
   "scripts": {
     "build": "swc lib -d dist",
     "prepublishOnly": "npm run build",
-    "test": "npx pyret --builtin-js-dir node_modules/pyret-lang/src/js/trove/ -p tests/main.arr -o .pyret/main.cjs && node --test tests/schema.js"
+    "test": "npx pyret --builtin-js-dir node_modules/pyret-lang/src/js/trove/ -p tests/main.arr -o .pyret/main.cjs && node --test tests/schema.js",
+    "test:shim:build": "npx pyret --builtin-js-dir node_modules/pyret-lang/src/js/trove/ -p tests/scripts/shim.arr -o .pyret/shim.cjs --norun",
+    "test:shim": "node ./.pyret/shim.cjs"
   },
   "dependencies": {
     "zod": "^4.0.5"
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "pyret-autograder": "^0.0.1-pre.31",
-    "swc": "^1.0.11"
+    "swc": "^1.0.11",
+    "yaml": "^2.8.1"
   }
 }
