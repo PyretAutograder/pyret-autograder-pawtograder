@@ -89,9 +89,14 @@ check "convert-grader":
               "function", "foo",
               "points", 1]]) satisfies is-Grader
   convert([string-dict:
-      "deps", deps,
-      "type", "feedbot",
-      "config", [string-dict:
-        "function", "foo"]]) satisfies is-Grader
+            "deps", deps,
+            "type", "feedbot",
+            "config", [string-dict:
+              "function", "foo",
+              "model", "gpt-77",
+              "provider", "megacorp",
+              "temperature", ~0.5,
+              "account", "Aoun",
+              "max_tokens", 100000]]) satisfies is-Grader
 end
 
