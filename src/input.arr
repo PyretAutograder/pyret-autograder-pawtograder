@@ -22,6 +22,7 @@ import string-dict as SD
 import pathlib as Path
 import npm("pyret-autograder", "main.arr") as A
 import mk-feedbot from file("./graders/feedbot.arr")
+import mk-program-inspector from file("./graders/program-inspector.arr")
 
 provide:
   process-spec,
@@ -156,6 +157,8 @@ fun convert-grader(
       account = config.get("account").and-then(expect-str)
       max-tokens = config.get("max_tokens").and-then(expect-num).or-else(5000)
       mk-feedbot(id, deps, entry, func, model, provider, temperature, account, max-tokens)
+    | typ == "program-inspector" then:
+      mk-program-inspector(id, deps, entry)
     | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
   end
 end

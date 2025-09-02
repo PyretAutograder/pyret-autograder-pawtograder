@@ -98,5 +98,8 @@ check "convert-grader":
               "temperature", ~0.5,
               "account", "Aoun",
               "max_tokens", 100000]]) satisfies is-Grader
+  convert([string-dict:
+            "deps", deps,
+            "type", "program-inspector"]) satisfies is-Grader
 end
 

@@ -136,8 +136,12 @@ const FeedbotGrader = BaseScorer.extend({
     temperature: z.number().min(0).max(1).optional(),
     account: z.string().optional(),
     max_tokens: z.number().min(1).optional(),
-  })
-})
+  }),
+});
+
+const ProgramInspectorGrader = BaseScorer.extend({
+  type: z.literal("program-inspector"),
+});
 
 export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
@@ -148,6 +152,7 @@ export const Grader = z.discriminatedUnion("type", [
   FunctionalGrader,
   SelfTestGrader,
   FeedbotGrader,
+  ProgramInspectorGrader,
 ]);
 
 export type Grader = z.infer<typeof Grader>;
