@@ -150,7 +150,12 @@ fun convert-grader(
     | typ == "feedbot" then:
       config = grader.get-value("config") ^ expect-obj
       func = config.get-value("function") ^ expect-str
-      mk-feedbot(id, deps, entry, func)
+      model = config.get("model").and-then(expect-str)
+      provider = config.get("provider").and-then(expect-str)
+      temperature = config.get("temperature").and-then(expect-num).or-else(1)
+      account = config.get("account").and-then(expect-str)
+      max-tokens = config.get("max_tokens").and-then(expect-num).or-else(5000)
+      mk-feedbot(id, deps, entry, func, model, provider, temperature, account, max-tokens)
     | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
   end
 end

@@ -71,7 +71,7 @@ function-dr-prompt = "Here are the design recipe steps for functions. Follow the
 final-instructions-prompt = "\n\nBegin your response now. Remember to first PLAN your response, and then ANSWER CONCISELY, exactly as described -- DO NOT MENTION EARLIER STEPS THAT DO NOT HAVE ISSUES. DO NOT SUMMARIZE HOW THEY WENT. JUST MENTION THE FIRST STEP WITH AN ISSUE."
 
 fun score-feedbot(
-  path :: String, fn-name :: String
+  path :: String, fn-name :: String, model :: Option<String>, provider :: Option<String>, temperature :: Number, account :: Option<String>, max-tokens :: Number
 ):
   cases (Either) parse-path(path):
     | left(err) =>
@@ -84,7 +84,7 @@ fun score-feedbot(
       #sliced = slice-from-function(prog, fn-name)
       prompt = system-prompt + general-prompt(fn-name) + function-dr-prompt + "GIVE DESIGN RECIPE FEEDBACK AS SPECIFIED ON FUNCTION `" + fn-name + "`, WHICH APPEARS IN THE FOLLOWING PROGRAM:\n\n" + prog.tosource().pretty(80).join-str("\n") + final-instructions-prompt
 
-      info = feedbot-info("openai", "gpt-5-mini", prompt, 5000, 1, feedbot-rate-limit(60))
+      info = feedbot-info(model.or-else("openai"), provider.or-else("gpt-5-mini"), prompt, max-tokens, temperature, feedbot-rate-limit(60))
       right({0; info})
   end
 end
@@ -97,10 +97,10 @@ end
 
 
 fun mk-feedbot(
-  id :: A.Id, deps :: List<A.Id>, path :: String, fn-name :: String
+  id :: A.Id, deps :: List<A.Id>, path :: String, fn-name :: String, model :: Option<String>, provider :: Option<String>, temperature :: Number, account :: Option<String>, max-tokens :: Number
 ):
   name = "Feedbot for " + fn-name
-  scorer = lam(): score-feedbot(path, fn-name) end
+  scorer = lam(): score-feedbot(path, fn-name, model, provider, temperature, account, max-tokens) end
   fmter = fmt-feedbot
   max-score = 0
   part = some(fn-name)

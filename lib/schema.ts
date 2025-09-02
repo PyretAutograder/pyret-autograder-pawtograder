@@ -131,7 +131,11 @@ const FeedbotGrader = BaseScorer.extend({
   type: z.literal("feedbot"),
   config: z.object({
     function: z.string(),
-    // TODO: decide other inputs
+    model: z.string().optional(),
+    provider: z.string().optional(),
+    temperature: z.number().min(0).max(1).optional(),
+    account: z.string().optional(),
+    max_tokens: z.number().min(1).optional(),
   })
 })
 
