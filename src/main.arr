@@ -19,18 +19,62 @@
 include file("input.arr")
 include file("output.arr")
 import npm("pyret-autograder", "main.arr") as A
+import npm("pyret-autograder", "utils.arr") as U
+import sets as S
 import json as J
 
 provide:
   grade-pawtograder-spec
 end
 
-fun grade-pawtograder-spec(spec :: String) -> J.JSON:
+fun validate-dag<B, R, E, I, C>(
+  dag :: List<A.Node<B, R, E, I, C>>
+) -> Nothing block:
+  doc: ```
+    Determines if a list of nodes form a valid directed acyclic graph (DAG)
+    meaning that:
+    - they don't form cycles
+    - each node has a unique id
+  ```
+  ids = dag.map(_.id)
+
+  when U.has-duplicates(ids):
+    raise("dag has duplicate id")
+  end
+
+  for each(x from dag) block:
+    when not(x.deps.all(ids.member(_))):
+      raise("not all deps exist for " + x.id)
+    end
+    nothing
+  end
+
+  dict = U.list-to-stringdict(dag.map(lam(n): {n.id; n.deps} end))
+
+  fun has-cycle-from(id :: A.Id, path-set :: S.Set<A.Id>):
+    dict.get-value(id).any(lam(dep):
+      path-set.member(dep) or
+      has-cycle-from(dep, path-set.add(dep))
+    end)
+  end
+
+  for each(id from ids) block:
+    when has-cycle-from(id, [S.list-set: id]):
+      raise("cycle from " + id)
+    end
+  end
+
+  nothing
+end
+
+
+fun grade-pawtograder-spec(spec :: String) -> J.JSON block:
   # this can throw, but that's fine since we don't need to respond gracefully
   # if provided an invalid spec (should be validated using the provided schema)
   spec-json = J.read-json(spec)
 
   graders = process-spec(spec-json)
+  validate-dag(graders)
 
   result = A.grade(graders)
 
