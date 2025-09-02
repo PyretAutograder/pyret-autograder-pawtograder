@@ -82,8 +82,8 @@ fun score-feedbot(
         end
       })
     | right(prog) =>
-      #sliced = slice-from-function(prog, fn-name)
-      prompt = system-prompt + general-prompt(fn-name) + function-dr-prompt + "GIVE DESIGN RECIPE FEEDBACK AS SPECIFIED ON FUNCTION `" + fn-name + "`, WHICH APPEARS IN THE FOLLOWING PROGRAM:\n```pyret\n" + prog.tosource().pretty(80).join-str("\n") + "```" + final-instructions-prompt
+      sliced = slice-from-function(prog, fn-name)
+      prompt = system-prompt + general-prompt(fn-name) + function-dr-prompt + "GIVE DESIGN RECIPE FEEDBACK AS SPECIFIED ON FUNCTION `" + fn-name + "`, WHICH APPEARS IN THE FOLLOWING PROGRAM:\n```pyret\n" + sliced.tosource().pretty(80).join-str("\n") + "```" + final-instructions-prompt
 
       info = feedbot-info(
         model.or-else("openai"), 
