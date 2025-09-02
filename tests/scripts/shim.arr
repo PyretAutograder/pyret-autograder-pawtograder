@@ -26,4 +26,5 @@ input = io.get-stdin()
 
 result = P.grade-pawtograder-spec(input)
 
+debugging.print-json(result.serialize())
 debugging.print-raw(J.tojson(result.native().get-value("tests").get(0).get-value("extra_data")).serialize())
