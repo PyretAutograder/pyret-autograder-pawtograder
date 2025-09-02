@@ -33,7 +33,7 @@ end
 data FeedBotRateLimit:
   | feedbot-rate-limit(
       cooldown :: Number
-  ) with:
+    ) with:
     method serialize(self):
       [SD.string-dict:
         "cooldown", self.cooldown
@@ -49,7 +49,7 @@ data FeedbotInfo:
       max-tokens :: Number,
       temperature :: Number,
       rate-limit :: FeedBotRateLimit
-      ) with:
+    ) with:
     method serialize(self):
       [SD.string-dict:
         "provider", self.provider,
@@ -58,7 +58,8 @@ data FeedbotInfo:
         "max_tokens", self.max-tokens,
         "temperature", self.temperature,
         "rate_limit", self.rate-limit.serialize(),
-        "type", "v1"]
+        "type", "v1"
+      ]
     end
 end
 
@@ -82,9 +83,16 @@ fun score-feedbot(
       })
     | right(prog) =>
       #sliced = slice-from-function(prog, fn-name)
-      prompt = system-prompt + general-prompt(fn-name) + function-dr-prompt + "GIVE DESIGN RECIPE FEEDBACK AS SPECIFIED ON FUNCTION `" + fn-name + "`, WHICH APPEARS IN THE FOLLOWING PROGRAM:\n\n" + prog.tosource().pretty(80).join-str("\n") + final-instructions-prompt
+      prompt = system-prompt + general-prompt(fn-name) + function-dr-prompt + "GIVE DESIGN RECIPE FEEDBACK AS SPECIFIED ON FUNCTION `" + fn-name + "`, WHICH APPEARS IN THE FOLLOWING PROGRAM:\n```pyret\n" + prog.tosource().pretty(80).join-str("\n") + "```" + final-instructions-prompt
 
-      info = feedbot-info(model.or-else("openai"), provider.or-else("gpt-5-mini"), prompt, max-tokens, temperature, feedbot-rate-limit(60))
+      info = feedbot-info(
+        model.or-else("openai"), 
+        provider.or-else("gpt-5-mini"), 
+        prompt, 
+        max-tokens, 
+        temperature, 
+        feedbot-rate-limit(60)
+      )
       right({0; info})
   end
 end
