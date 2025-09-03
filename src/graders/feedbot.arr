@@ -43,20 +43,22 @@ end
 
 data FeedbotInfo:
   | feedbot-info(
-      provider :: String,
       model :: String,
+      provider :: String,
       prompt :: String,
-      max-tokens :: Number,
       temperature :: Number,
+      account :: Option<String>,
+      max-tokens :: Number,
       rate-limit :: FeedBotRateLimit
     ) with:
     method serialize(self):
       [SD.string-dict:
-        "provider", self.provider,
         "model", self.model,
+        "provider", self.provider,
         "prompt", self.prompt,
-        "max_tokens", self.max-tokens,
         "temperature", self.temperature,
+        "account", self.account.or-else(nothing),
+        "max_tokens", self.max-tokens,
         "rate_limit", self.rate-limit.serialize(),
         "type", "v1"
       ]
@@ -72,7 +74,9 @@ function-dr-prompt = "Here are the design recipe steps for functions. Follow the
 final-instructions-prompt = "\n\nBegin your response now. Remember to first PLAN your response, and then ANSWER CONCISELY, exactly as described -- DO NOT MENTION EARLIER STEPS THAT DO NOT HAVE ISSUES. DO NOT SUMMARIZE HOW THEY WENT. JUST MENTION THE FIRST STEP WITH AN ISSUE."
 
 fun score-feedbot(
-  path :: String, fn-name :: String, model :: Option<String>, provider :: Option<String>, temperature :: Number, account :: Option<String>, max-tokens :: Number
+  path :: String, fn-name :: String, model :: Option<String>,
+  provider :: Option<String>, temperature :: Number, account :: Option<String>,
+  max-tokens :: Number
 ):
   cases (Either) parse-path(path):
     | left(err) =>
@@ -86,11 +90,12 @@ fun score-feedbot(
       prompt = system-prompt + general-prompt(fn-name) + function-dr-prompt + "GIVE DESIGN RECIPE FEEDBACK AS SPECIFIED ON FUNCTION `" + fn-name + "`, WHICH APPEARS IN THE FOLLOWING PROGRAM:\n```pyret\n" + sliced.tosource().pretty(80).join-str("\n") + "```" + final-instructions-prompt
 
       info = feedbot-info(
-        model.or-else("openai"), 
-        provider.or-else("gpt-5-mini"), 
-        prompt, 
-        max-tokens, 
-        temperature, 
+        model.or-else("gpt-5-mini"),
+        provider.or-else("openai"),
+        prompt,
+        temperature,
+        account,
+        max-tokens,
         feedbot-rate-limit(60)
       )
       right({0; info})
@@ -103,12 +108,17 @@ fun fmt-feedbot(_, info :: FeedbotInfo) -> A.ComboAggregate:
   {general; staff}
 end
 
-
 fun mk-feedbot(
-  id :: A.Id, deps :: List<A.Id>, path :: String, fn-name :: String, model :: Option<String>, provider :: Option<String>, temperature :: Number, account :: Option<String>, max-tokens :: Number
+  id :: A.Id, deps :: List<A.Id>, path :: String, fn-name :: String,
+  model :: Option<String>, provider :: Option<String>, temperature :: Number,
+  account :: Option<String>, max-tokens :: Number
 ):
   name = "Feedbot for " + fn-name
-  scorer = lam(): score-feedbot(path, fn-name, model, provider, temperature, account, max-tokens) end
+  scorer = lam():
+    score-feedbot(
+      path, fn-name, model, provider, temperature, account, max-tokens
+    )
+  end
   fmter = fmt-feedbot
   max-score = 0
   part = some(fn-name)
