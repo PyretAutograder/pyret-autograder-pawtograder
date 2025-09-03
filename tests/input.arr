@@ -101,5 +101,12 @@ check "convert-grader":
   convert([string-dict:
             "deps", deps,
             "type", "program-inspector"]) satisfies is-Grader
+  convert([string-dict:
+            "deps", deps,
+            "type", "image-artifact",
+            "out", "artifact.png",
+            "config", [string-dict:
+              "generator", "problem1.arr",
+              "name", "Problem 1"]]) satisfies is-Grader
 end
 

@@ -159,6 +159,12 @@ fun convert-grader(
       mk-feedbot(id, deps, entry, func, model, provider, temperature, account, max-tokens)
     | typ == "program-inspector" then:
       mk-program-inspector(id, deps, entry)
+    | typ == "image-artifact" then:
+      out = grader.get-value("out") ^ expect-str
+      config = grader.get-value("config") ^ expect-obj
+      generator_ = config.get-value("generator") ^ expect-str
+      name = config.get-value("name") ^ expect-str
+      A.mk-image-artifact(id, deps, entry, generator_, out, name)
     | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
   end
 end

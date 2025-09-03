@@ -63,6 +63,11 @@ const BaseScorer = BaseGrader.extend({
   points: z.number().nonnegative().optional(),
 });
 
+const BaseArtist = BaseGrader.extend({
+  /** outfile, relative to the artifact directory */
+  out: z.string()
+});
+
 const WellFormedGrader = BaseGuard.extend({
   type: z.literal("well-formed"),
 });
@@ -143,6 +148,14 @@ const ProgramInspectorGrader = BaseGrader.extend({
   type: z.literal("program-inspector"),
 });
 
+const ImageArtifactGrader = BaseArtist.extend({
+  type: z.literal("image-artifact"),
+  config: z.strictObject({
+    generateor: z.string(),
+    name: z.string(),
+  }),
+})
+
 export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
   FunctionDefinedGrader,
@@ -153,6 +166,7 @@ export const Grader = z.discriminatedUnion("type", [
   SelfTestGrader,
   FeedbotGrader,
   ProgramInspectorGrader,
+  ImageArtifactGrader,
 ]);
 
 export type Grader = z.infer<typeof Grader>;
