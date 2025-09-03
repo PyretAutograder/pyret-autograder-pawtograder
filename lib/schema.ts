@@ -151,7 +151,7 @@ const ProgramInspectorGrader = BaseGrader.extend({
 const ImageArtifactGrader = BaseArtist.extend({
   type: z.literal("image-artifact"),
   config: z.strictObject({
-    generateor: z.string(),
+    generator: z.string(),
     name: z.string(),
   }),
 })
