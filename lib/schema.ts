@@ -69,7 +69,7 @@ const WellFormedGrader = BaseGuard.extend({
 
 const FunctionDefinedGrader = BaseGuard.extend({
   type: z.literal("function-defined"),
-  config: z.object({
+  config: z.strictObject({
     /** the name of the function to check the existance of */
     function: z.string(),
     /** the expected parameter arity */
@@ -79,7 +79,7 @@ const FunctionDefinedGrader = BaseGuard.extend({
 
 const TestDiversityGrader = BaseGuard.extend({
   type: z.literal("test-diversity"),
-  config: z.object({
+  config: z.strictObject({
     /** the function to check the submission's test diversity of */
     function: z.string(),
     /** the minimum number of inputs that must be provided */
@@ -91,7 +91,7 @@ const TestDiversityGrader = BaseGuard.extend({
 
 const TrainingWheelsGrader = BaseGuard.extend({
   type: z.literal("training-wheels"),
-  config: z.object({
+  config: z.strictObject({
     /** whether to only check for mutation at the top level of the program */
     top_level_only: z.boolean(),
   }),
@@ -99,7 +99,7 @@ const TrainingWheelsGrader = BaseGuard.extend({
 
 const ExamplarGrader = BaseScorer.extend({
   type: z.union([z.literal("wheat"), z.literal("chaff")]),
-  config: z.object({
+  config: z.strictObject({
     /** the path which contains the wheat/chaff implementation */
     path: z.string(),
     /** the name of the function to use */
@@ -109,7 +109,7 @@ const ExamplarGrader = BaseScorer.extend({
 
 const FunctionalGrader = BaseScorer.extend({
   type: z.literal("functional"),
-  config: z.object({
+  config: z.strictObject({
     /** the path which contain the check block */
     path: z.string(),
     /** the name of the check block to use in the provided path */
@@ -121,15 +121,15 @@ const FunctionalGrader = BaseScorer.extend({
 
 const SelfTestGrader = BaseScorer.extend({
   type: z.literal("self-test"),
-  config: z.object({
+  config: z.strictObject({
     /** the name of the function to use */
     function: z.string(),
   }),
 });
 
-const FeedbotGrader = BaseScorer.extend({
+const FeedbotGrader = BaseGrader.extend({
   type: z.literal("feedbot"),
-  config: z.object({
+  config: z.strictObject({
     function: z.string(),
     model: z.string().optional(),
     provider: z.string().optional(),
@@ -139,7 +139,7 @@ const FeedbotGrader = BaseScorer.extend({
   }),
 });
 
-const ProgramInspectorGrader = BaseScorer.extend({
+const ProgramInspectorGrader = BaseGrader.extend({
   type: z.literal("program-inspector"),
 });
 
