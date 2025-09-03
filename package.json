@@ -25,7 +25,7 @@
     "pyret-autograder": ">=0.0.1-pre.32 <0.0.2"
   },
   "devDependencies": {
-    "pyret-autograder": "^0.0.1-pre.32",
+    "pyret-autograder": "^0.0.1-pre.35",
     "swc": "^1.0.11",
     "yaml": "^2.8.1"
   }

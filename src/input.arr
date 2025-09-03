@@ -162,7 +162,8 @@ fun convert-grader(
     | typ == "image-artifact" then:
       out = grader.get-value("out") ^ expect-str
       config = grader.get-value("config") ^ expect-obj
-      generator_ = config.get-value("generator") ^ expect-str
+      _generator_ = config.get-value("generator") ^ expect-str
+      generator_ = Path.resolve(Path.join(solution-dir, _generator_))
       name = config.get-value("name") ^ expect-str
       A.mk-image-artifact(id, deps, entry, generator_, out, name)
     | otherwise: raise("INVALID CONFIG: unknown grader type " + typ)
