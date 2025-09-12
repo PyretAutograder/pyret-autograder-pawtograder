@@ -175,13 +175,14 @@ end
 data PawtograderArtifact:
   | pawtograder-artifact(
       name :: String,
-      path :: String
-      # TODO: what is data?
+      path :: String,
+      extra-data :: SD.StringDict<Any>
   ) with:
   method to-json(self) -> J.JSON block:
     sd = [SD.mutable-string-dict:]
     add(sd, "name", self.name, J.to-json)
     add(sd, "path", self.path, J.to-json)
+    add(sd, "data", self.extra-data, J.to-json)
     J.j-obj(sd.freeze())
   end
 end
@@ -359,17 +360,21 @@ fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
           hidden-extra-data
         )
         link(test, acc)
-      | flat-agg-art(_, _, _) => acc
+      | flat-agg-art(_, _, _, _) => acc
     end
   end.reverse()
 
   artifacts = for fold(acc from [list:], {id; flat} from flattened):
     cases (grading-helpers.FlatAggregateResult) flat:
       | flat-agg-test(_, _, _, _, _, _) => acc
-      | flat-agg-art(name, desc, path) =>
-        # TODO: can we add id as metadata somewhere?
+      | flat-agg-art(name, desc, path, format) =>
         # TODO: description
-        artifact = pawtograder-artifact(name, path)
+        extra-data = cases (A.ArtifactFormat) format:
+          | png => [SD.string-dict: "format", "png"]
+          | zip => [SD.string-dict: "format", "zip"]
+          | else => [SD.string-dict:]
+        end
+        artifact = pawtograder-artifact(name, path, extra-data)
         link(artifact, acc)
     end
   end.reverse()
