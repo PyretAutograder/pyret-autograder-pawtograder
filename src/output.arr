@@ -182,6 +182,7 @@ data PawtograderArtifact:
     sd = [SD.mutable-string-dict:]
     add(sd, "name", self.name, J.to-json)
     add(sd, "path", self.path, J.to-json)
+    add(sd, "data", [SD.string-dict: "format", "png", "display", "image"], J.to-json)
     J.j-obj(sd.freeze())
   end
 end
