@@ -82,6 +82,14 @@ const FunctionDefinedGrader = BaseGuard.extend({
   }),
 });
 
+const ConstantDefinedGrader = BaseGuard.extend({
+  type: z.literal("constant-defined"),
+  config: z.strictObject({
+    /** the name of the constant to check the existance of */
+    constant: z.string(),
+  }),
+});
+
 const TestDiversityGrader = BaseGuard.extend({
   type: z.literal("test-diversity"),
   config: z.strictObject({
@@ -159,6 +167,7 @@ const ImageArtifactGrader = BaseArtist.extend({
 export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
   FunctionDefinedGrader,
+  ConstantDefinedGrader,
   TestDiversityGrader,
   TrainingWheelsGrader,
   ExamplarGrader,

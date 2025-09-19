@@ -22,10 +22,10 @@
     "zod": "^4.0.5"
   },
   "peerDependencies": {
-    "pyret-autograder": ">=0.0.1-pre.37 <0.0.2"
+    "pyret-autograder": ">=0.0.1-pre.38 <0.0.2"
   },
   "devDependencies": {
-    "pyret-autograder": "^0.0.1-pre.37",
+    "pyret-autograder": "^0.0.1-pre.38",
     "swc": "^1.0.11",
     "yaml": "^2.8.1"
   }

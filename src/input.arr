@@ -117,7 +117,11 @@ fun convert-grader(
       config = grader.get-value("config") ^ expect-obj
       fn-name = config.get-value("function") ^ expect-str
       arity = config.get-value("arity") ^ expect-num
-      A.mk-fn-def-guard(id, deps, entry, fn-name, arity)
+      A.mk-fn-def(id, deps, entry, fn-name, arity)
+    | typ == "constant-defined" then:
+      config = grader.get-value("config") ^ expect-obj
+      const-name = config.get-value("constant") ^ expect-str
+      A.mk-const-def(id, deps, entry, const-name)
     | typ == "test-diversity" then:
       config = grader.get-value("config") ^ expect-obj
       fn = config.get-value("function") ^ expect-str

@@ -55,6 +55,11 @@ check "convert-grader":
               "arity", 3]]) satisfies is-Grader
   convert([string-dict:
             "deps", deps,
+            "type", "constant-defined",
+            "config", [string-dict:
+              "constant", "foo"]]) satisfies is-Grader
+  convert([string-dict:
+            "deps", deps,
             "type", "test-diversity",
             "config", [string-dict:
               "function", "foo",
