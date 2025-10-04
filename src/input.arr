@@ -23,6 +23,7 @@ import pathlib as Path
 import npm("pyret-autograder", "main.arr") as A
 import mk-feedbot from file("./graders/feedbot.arr")
 import mk-program-inspector from file("./graders/program-inspector.arr")
+import mk-style from file("./graders/style.arr")
 
 provide:
   process-spec,
@@ -163,6 +164,9 @@ fun convert-grader(
       mk-feedbot(id, deps, entry, func, model, provider, temperature, account, max-tokens)
     | typ == "program-inspector" then:
       mk-program-inspector(id, deps, entry)
+    | typ == "style" then:
+      points = grader.get("points").and-then(expect-num).or-else(0)
+      mk-style(id, deps, entry, points)
     | typ == "image-artifact" then:
       out = grader.get-value("out") ^ expect-str
       config = grader.get-value("config") ^ expect-obj

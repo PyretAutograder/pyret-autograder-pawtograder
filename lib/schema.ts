@@ -18,6 +18,7 @@
 */
 
 import { z } from "zod";
+import { number } from "zod/mini";
 
 // ensure that consumers of the library use the same version of zod
 export { z };
@@ -156,6 +157,15 @@ const ProgramInspectorGrader = BaseGrader.extend({
   type: z.literal("program-inspector"),
 });
 
+const StyleGrader = BaseScorer.extend({
+  type: z.literal("style"),
+  config: z.strictObject({
+    /*
+    penalty: z.number()
+    */
+  })
+})
+
 const ImageArtifactGrader = BaseArtist.extend({
   type: z.literal("image-artifact"),
   config: z.strictObject({
@@ -175,6 +185,7 @@ export const Grader = z.discriminatedUnion("type", [
   SelfTestGrader,
   FeedbotGrader,
   ProgramInspectorGrader,
+  StyleGrader,
   ImageArtifactGrader,
 ]);
 

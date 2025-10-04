@@ -113,5 +113,9 @@ check "convert-grader":
             "config", [string-dict:
               "generator", "problem1.arr",
               "name", "Problem 1"]]) satisfies is-Grader
+  convert([string-dict:
+            "deps", deps,
+            "type", "style",
+            "config", [string-dict:]]) satisfies is-Grader
 end
 
