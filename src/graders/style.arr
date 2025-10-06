@@ -22,6 +22,9 @@ import ast as A
 import npm("pyret-autograder", "common/ast.arr") as CA
 import json as J
 import string-dict as SD
+import filesystem as FS
+import lists as L
+import is-kebab-case, is-capital-kebab-case from js-file("../utils/naming")
 
 include either
 
@@ -30,45 +33,166 @@ provide:
   mk-style,
 end
 
-data StyleInfo:
-  | parser-error(err :: CA.ParsePathError)
-  | style-info with:
-    method serialize(self):
-      [SD.string-dict: ]
+MAX-LINE-LENGTH = 100
+
+# TODO: improve scoring customization
+
+data Style:
+  | line-length(actual :: Number)
+  | function-name(name :: String)
+  | other-name(name :: String)
+  | function-spacing
+sharing:
+  method to-string(self):
+    cases (Style) self:
+      | line-length(actual) =>
+        "Line longer than " + num-to-string(MAX-LINE-LENGTH) + " (" +
+        num-to-string(actual) + ")"
+      | function-name(name) => "Function name isn't kabab-case: " + name
+      | variable-name(name) => "Name not kebab-case or CAPITAL-KEBAB-CASE: " + name
+      | function-spacing => "Missing blank line before top-level function"
     end
+  end
 end
 
-fun check-fun-names(ast :: A.Program):
-  nothing
+data Violation:
+  violation(line :: Number, style :: Style)
+end
+
+data StyleInfo:
+  | parser-error(err :: CA.ParsePathError)
+  | style-info(file :: String, violations :: List<Violation>)
+end
+
+fun is-valid-name(allow-const :: Boolean, name :: String) -> Boolean:
+  if allow-const:
+    is-kebab-case(name) or is-capital-kebab-case(name)
+  else:
+    is-kebab-case(name)
+  end
+end
+
+fun check-line-length(program :: String):
+  for fold(
+    {lnum; acc} from {1; [list:]},
+    line from string-split-all(program, "\n")
+  ):
+    len = string-length(line)
+    new-acc = if len > MAX-LINE-LENGTH:
+      link(violation(line, line-length(len)), acc)
+    else:
+      acc
+    end
+    {lnum + 1; new-acc}
+  end.{1}.reverse()
+end
+
+fun check-fun-names(ast :: A.Program) block:
+  var violations = [list:]
+
+  visitor = A.default-iter-visitor.{
+    method s-fun(self, l, name, _, _, _, _, body, _, _check, _):
+      if not(is-valid-name(false, name)) block:
+        line = l.start-line
+        violations := link(violation(line, function-name(name)), violations)
+        true
+      else:
+        true
+      end and body.visit(self) and self.option(_check)
+    end
+  }
+  ast.visit(visitor)
+  violation.reverse()
+end
+
+fun check-binds(ast :: A.Program) block:
+  var violations = [list:]
+
+  visitor = A.default-iter-visitor.{
+    method s-bind(self, l, _, name, _):
+      if not(is-valid-name(true, name)) block:
+        line = l.start-line
+        violations := link(violation(line, other-name(name)), violations)
+        true
+      else:
+        true
+      end
+    end
+  }
+  ast.visit(visitor)
+  violations.reverse()
+end
+
+fun check-tl-fun-spacing(ast :: A.Program):
+  cases (A.Program) ast:
+    | s-program(_, _, _, _, _, _, body) =>
+      cases (A.Expr) body:
+        | s-block(_, stmts) =>
+          for fold({prev-end; prev-fun; violations} from {-1; false; [list:]},
+                   stmt from stmts):
+            cases(A.Expr) stmt:
+              | s-fun(l, _, _, _, _, _, _, _, _, _) =>
+                start = l.start-line
+                _end = l.end-line
+                if (prev-end + 2) <= start:
+                  new-violations = link(
+                    violation(start, function-spacing), violations
+                  )
+                  {_end; true; new-violations}
+                else:
+                  {_end; true; violations}
+                end
+              | else =>
+                _end = stmt.l.end-line
+                {_end; false; violations}
+            end
+          end.{2}.reverse()
+        | else => [list:]
+      end
+  end
 end
 
 fun score-style(
-  path :: String 
+  path :: String
 ):
   cases (Either) CA.parse-path(path):
     | left(err) =>
       right({0; parser-error(err)})
     | right(prog) =>
-      info = style-info
-      # TODO:
-      right({0; info})
+      violations = check-line-length(FS.read-file-string(path)) +
+                   check-fun-names(prog) +
+                   check-binds(prog) +
+                   check-tl-fun-spacing(prog)
+      info = style-info(path, violations)
+      num = L.length(violations)
+      score = 1 - if num > 10: 0 else: 0.1 * num end
+      right({score; info})
   end
 end
 
-fun fmt-style(_, info :: StyleInfo) -> AG.ComboAggregate:
-  general = AG.output-text("Coming soon")
+fun fmt-style(score, info :: StyleInfo) -> AG.ComboAggregate:
+  general = cases (StyleInfo) info:
+    | parse-err(_) => AG.output-text("couldn't parse")
+    | style-info(_, _) =>
+      if score == 1:
+        AG.output-markdown("No style issues found.")
+      else:
+        AG.output-markdown("Style issues found, see your file's comments.")
+      end
+  end
   staff = none
   {general; staff}
 end
 
 fun mk-style(
-  id :: AG.Id, deps :: List<AG.Id>, path :: String, max-score :: Number
+  id :: AG.Id, deps :: List<AG.Id>, path :: String,
+  max-score :: Number
 ):
   name = "Automated Style Grading"
   scorer = lam():
     score-style(path)
   end
   fmter = fmt-style
-  part = none 
+  part = none
   AG.mk-simple-scorer(id, deps, scorer, name, max-score, fmter, part)
 end

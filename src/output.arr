@@ -22,6 +22,7 @@ import string-dict as SD
 import ast as AST
 import npm("pyret-autograder", "main.arr") as A
 import file("./graders/feedbot.arr") as FB
+import file("./graders/style.arr") as ST
 
 include from A:
   module grading-helpers
@@ -386,13 +387,44 @@ fun prepare-for-pawtograder(output :: A.GradingOutput) -> J.JSON block:
                          ^ {(r): {r; aggregate-to-pawtograder-output}}
                          ^ {({{g; s}; f}): {f(g); f(s)}}
 
+  annotations = for fold(acc from [list:], entry from output.trace):
+    cases(A.NodeResult) entry.result:
+      | executed(_, info, _) =>
+        if is-some(info) and ST.is-StyleInfo(info.value)
+          and ST.is-style-info(info.value):
+          file = info.value.file
+          violations = info.value.violations
+          for fold(shadow acc from acc, violation from violations):
+            author = feedback-author(
+              "Autograder",
+              "https://api.dicebear.com/9.x/identicon/svg?seed=Autograder",
+              none, none
+            )
+            annotation = feedback-line-comment(
+              author,
+              violation.style.to-string(),
+              none,
+              none,
+              true,
+              violation.line,
+              file
+            )
+            link(annotation, acc)
+          end
+        else:
+          acc
+        end
+      | else => acc
+    end
+  end.reverse()
+
   pawtograder-feedback(
     tests,
     pawtograder-lint(none, "", pass), # TODO: show guard failures here?
     pawtograder-top-level-output(some(gen-top), some(staff-top), none, none),
     none, none,
     artifacts,
-    [list:]
+    annotations
   ).to-json()
 end
 

@@ -18,7 +18,6 @@
 */
 
 import { z } from "zod";
-import { number } from "zod/mini";
 
 // ensure that consumers of the library use the same version of zod
 export { z };
