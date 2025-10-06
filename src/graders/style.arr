@@ -49,7 +49,7 @@ sharing:
         "Line longer than " + num-to-string(MAX-LINE-LENGTH) + " (" +
         num-to-string(actual) + ")"
       | function-name(name) => "Function name isn't kabab-case: " + name
-      | variable-name(name) => "Name not kebab-case or CAPITAL-KEBAB-CASE: " + name
+      | other-name(name) => "Name not kebab-case or CAPITAL-KEBAB-CASE: " + name
       | function-spacing => "Missing blank line before top-level function"
     end
   end
