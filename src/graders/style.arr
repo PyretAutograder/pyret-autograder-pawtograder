@@ -102,7 +102,7 @@ fun check-fun-names(ast :: A.Program) block:
     end
   }
   ast.visit(visitor)
-  violation.reverse()
+  violations.reverse()
 end
 
 fun check-binds(ast :: A.Program) block:
@@ -110,9 +110,9 @@ fun check-binds(ast :: A.Program) block:
 
   visitor = A.default-iter-visitor.{
     method s-bind(self, l, _, name, _):
-      if not(is-valid-name(true, name)) block:
+      if not(is-valid-name(true, name.s)) block:
         line = l.start-line
-        violations := link(violation(line, other-name(name)), violations)
+        violations := link(violation(line, other-name(name.s)), violations)
         true
       else:
         true
@@ -134,7 +134,10 @@ fun check-tl-fun-spacing(ast :: A.Program):
               | s-fun(l, _, _, _, _, _, _, _, _, _) =>
                 start = l.start-line
                 _end = l.end-line
-                if (prev-end + 2) <= start:
+                if (start - prev-end) < 2:
+                  print("pre-fun: " + torepr(prev-fun) + "\n")
+                  print("prev: " + torepr(prev-end) + "\n")
+                  print("start: " + torepr(start) + "\n")
                   new-violations = link(
                     violation(start, function-spacing), violations
                   )
@@ -153,7 +156,7 @@ fun check-tl-fun-spacing(ast :: A.Program):
 end
 
 fun score-style(
-  path :: String
+  path :: String, base-filename :: String
 ):
   cases (Either) CA.parse-path(path):
     | left(err) =>
@@ -163,7 +166,7 @@ fun score-style(
                    check-fun-names(prog) +
                    check-binds(prog) +
                    check-tl-fun-spacing(prog)
-      info = style-info(path, violations)
+      info = style-info(base-filename, violations)
       num = L.length(violations)
       score = 1 - if num > 10: 0 else: 0.1 * num end
       right({score; info})
@@ -185,12 +188,12 @@ fun fmt-style(score, info :: StyleInfo) -> AG.ComboAggregate:
 end
 
 fun mk-style(
-  id :: AG.Id, deps :: List<AG.Id>, path :: String,
+  id :: AG.Id, deps :: List<AG.Id>, path :: String, base-filename :: String,
   max-score :: Number
 ):
   name = "Automated Style Grading"
   scorer = lam():
-    score-style(path)
+    score-style(path, base-filename)
   end
   fmter = fmt-style
   part = none

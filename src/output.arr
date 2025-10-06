@@ -196,7 +196,7 @@ data PawtograderAnnotations:
       rubric-check-id :: Option<Number>,
       released :: Boolean) with:
   method to-json(self) block:
-    sd = self.common-sd(self)
+    sd = self.common-sd()
     J.j-obj(sd.freeze())
   end
   | feedback-line-comment(
@@ -208,7 +208,7 @@ data PawtograderAnnotations:
       line :: Number,
       file-name :: String) with:
   method to-json(self) block:
-    sd = self.common-sd(self)
+    sd = self.common-sd()
     add(sd, "line", self.line, J.to-json)
     add(sd, "file_name", self.file-name, J.to-json)
     J.j-obj(sd.freeze())
@@ -221,14 +221,14 @@ data PawtograderAnnotations:
       released :: Boolean,
       artifact-name :: String) with:
   method to-json(self) block:
-    sd = self.common-sd(self)
+    sd = self.common-sd()
     add(sd, "artifact_name", self.artifact-name, J.to-json)
     J.j-obj(sd.freeze())
   end
 sharing:
   method common-sd(self) block:
     sd = [SD.mutable-string-dict:]
-    add(sd, "author", self.author, _.to-json)
+    add(sd, "author", self.author, _.to-json())
     add(sd, "message", self.message, J.to-json)
     add(sd, "points", self.points, num-to-json)
     add(sd, "rubric_check_id", self.rubric-check-id, num-to-json)

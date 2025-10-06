@@ -30,7 +30,7 @@ program
   .option("-s, --solution <dir>", "Directory containing pawtograder.yml", ".")
   .action(async (submission, { solution }) => {
     const rawConfig = await readFile(join(solution, "pawtograder.yml"), "utf8");
-    const config = yaml.parse(rawConfig);
+    const config = yaml.parse(rawConfig, { merge: true });
     const spec = Spec.parse({
       solution_dir: solution,
       submission_dir: submission,

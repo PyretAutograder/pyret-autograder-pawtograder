@@ -166,7 +166,7 @@ fun convert-grader(
       mk-program-inspector(id, deps, entry)
     | typ == "style" then:
       points = grader.get("points").and-then(expect-num).or-else(0)
-      mk-style(id, deps, entry, points)
+      mk-style(id, deps, entry, entry-opt.value, points)
     | typ == "image-artifact" then:
       out = grader.get-value("out") ^ expect-str
       config = grader.get-value("config") ^ expect-obj
