@@ -79,7 +79,7 @@ fun check-line-length(program :: String):
   ):
     len = string-length(line)
     new-acc = if len > MAX-LINE-LENGTH:
-      link(violation(line, line-length(len)), acc)
+      link(violation(lnum, line-length(len)), acc)
     else:
       acc
     end
