@@ -60,7 +60,7 @@ data Violation:
 end
 
 data StyleInfo:
-  | parser-error(err :: CA.ParsePathError)
+  | parser-error(err :: CA.ParsePathErr)
   | style-info(file :: String, violations :: List<Violation>)
 end
 
