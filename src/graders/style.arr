@@ -110,9 +110,14 @@ fun check-binds(ast :: A.Program) block:
 
   visitor = A.default-iter-visitor.{
     method s-bind(self, l, _, name, _):
-      if not(is-valid-name(true, name.s)) block:
+      shadow name = if A.is-s-underscore(name) or A.is-s-atom(name):
+        "" # don't want spurious errors around casing, etc
+        else:
+          name.s
+        end
+      if not(is-valid-name(true, name)) block:
         line = l.start-line
-        violations := link(violation(line, other-name(name.s)), violations)
+        violations := link(violation(line, other-name(name)), violations)
         true
       else:
         true
