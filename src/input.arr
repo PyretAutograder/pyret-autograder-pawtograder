@@ -24,6 +24,8 @@ import npm("pyret-autograder", "main.arr") as A
 import mk-feedbot from file("./graders/feedbot.arr")
 import mk-program-inspector from file("./graders/program-inspector.arr")
 import mk-style from file("./graders/style.arr")
+import mk-docchk from file("./graders/docchk.arr")
+
 
 provide:
   process-spec,
@@ -167,6 +169,11 @@ fun convert-grader(
     | typ == "style" then:
       points = grader.get("points").and-then(expect-num).or-else(0)
       mk-style(id, deps, entry, entry-opt.value, points)
+    | typ == "docchk" then:
+      points = grader.get("points").and-then(expect-num).or-else(0)
+      config = grader.get-value("config") ^ expect-obj
+      fn-name = config.get-value("function") ^ expect-str
+      mk-docchk(id, deps, entry, fn-name, points)
     | typ == "image-artifact" then:
       out = grader.get-value("out") ^ expect-str
       config = grader.get-value("config") ^ expect-obj
