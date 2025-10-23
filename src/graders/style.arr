@@ -162,12 +162,11 @@ fun score-style(
     | left(err) =>
       right({0; parser-error(err)})
     | right(prog) =>
-      violations = check-line-length(FS.read-file-string(path)) +
-                   check-fun-names(prog) +
-                   check-binds(prog) +
-                   check-tl-fun-spacing(prog)
-      info = style-info(base-filename, violations)
-      num = L.length(violations)
+      point-violations = check-fun-names(prog) +
+                         check-binds(prog) +
+                         check-tl-fun-spacing(prog)
+      info = style-info(base-filename, check-line-length(FS.read-file-string(path)) + point-violations)
+      num = L.length(point-violations)
       score = 1 - if num > 10: 0 else: 0.1 * num end
       right({score; info})
   end
