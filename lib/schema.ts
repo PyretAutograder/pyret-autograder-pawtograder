@@ -163,6 +163,13 @@ const StyleGrader = BaseScorer.extend({
     penalty: z.number()
     */
   })
+});
+
+const DocChkGrader = BaseScorer.extend({
+  type: z.literal("docchk"),
+  config: z.strictObject({
+    function: z.string(),
+  }),
 })
 
 const ImageArtifactGrader = BaseArtist.extend({
@@ -171,7 +178,7 @@ const ImageArtifactGrader = BaseArtist.extend({
     generator: z.string(),
     name: z.string(),
   }),
-})
+});
 
 export const Grader = z.discriminatedUnion("type", [
   WellFormedGrader,
@@ -185,6 +192,7 @@ export const Grader = z.discriminatedUnion("type", [
   FeedbotGrader,
   ProgramInspectorGrader,
   StyleGrader,
+  DocChkGrader,
   ImageArtifactGrader,
 ]);
 
